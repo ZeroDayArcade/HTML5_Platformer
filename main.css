@@ -1,0 +1,12 @@
+body {
+    padding: 0;
+    margin: 0;
+    background-color: #222;
+    color: white;
+    text-align: center;
+}
+
+.canvas-container {
+    width: 816px;
+    margin: 100px auto;
+}
