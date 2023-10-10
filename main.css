@@ -6,6 +6,10 @@ body {
     text-align: center;
 }
 
+img {
+    display: none;
+}
+
 .canvas-container {
     width: 816px;
     margin: 100px auto;
