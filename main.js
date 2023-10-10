@@ -102,6 +102,23 @@ let hero = {
     velocityY: 0,
 }
 
+/* Load Game Music */
+var audioElement = document.getElementById("theAudio");
+audioElement.load();
+audioElement.volume = 0.6;
+var audioPlaying = false;
+
+/* For Safari Audio Compatibility */
+var enterPressedInitially = false;
+var beyondTitleScreen = false;
+onInitialEnterPress = function(e) {
+    if (e.key == "Enter") {
+        enterPressedInitially = true;
+        audioElement.play();
+    }
+}
+document.addEventListener('keypress', onInitialEnterPress);
+
 /* Draw Single Level Tile, 32x32 pixels */
 var drawTile = function(x, y, tileIndex) {
     var sx = (tileIndex*32) - (64*Math.floor(tileIndex/64)*32);
@@ -535,23 +552,6 @@ let previousFrameTime = oldTime;
 /* Load Current Level */
 currentLevel = JSON.parse(JSON.stringify(levels[0]));
 
-/* Load Game Music */
-var audioElement = document.getElementById("theAudio");
-audioElement.load();
-audioElement.volume = 0.6;
-var audioPlaying = false;
-
-/* For Safari Audio Compatibility */
-var enterPressedInitially = false;
-var beyondTitleScreen = false;
-onInitialEnterPress = function(e) {
-    if (e.key == "Enter") {
-        enterPressedInitially = true;
-        audioElement.play();
-    }
-}
-document.addEventListener('keypress', onInitialEnterPress);
-
 /* Game States */
 setInterval(function() {
     let now = Date.now();
@@ -593,4 +593,3 @@ setInterval(function() {
         oldTime = Date.now();
     }
 }, interval * 1000);
-
