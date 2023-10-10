@@ -1,8 +1,8 @@
 const canvas = document.getElementById('main_screen');
 const context = canvas.getContext("2d");
 var pressedKeys = {};
-window.onkeyup = function(e) { pressedKeys[e.keyCode] = false; }
-window.onkeydown = function(e) { pressedKeys[e.keyCode] = true; }
+window.onkeyup   = function(e) { pressedKeys[e.keyCode] = false; }
+window.onkeydown = function(e) { pressedKeys[e.keyCode] = true;  }
 
 const layers = [
     document.getElementById("parallax-mountain-bg"),
@@ -14,32 +14,32 @@ const layers = [
 
 const tiles = document.getElementById("tiles");
 
-const heroIdleAnimationLeft = document.getElementById("hero-idle-left");
-const heroIdleAnimationRight = document.getElementById("hero-idle-right");
-const heroRunAnimationLeft = document.getElementById("hero-run-left");
-const heroRunAnimationRight = document.getElementById("hero-run-right");
-const heroJumpAnimationLeft = document.getElementById("hero-jump-left");
-const heroJumpAnimationRight = document.getElementById("hero-jump-right");
-const heroAttackAnimationLeft = document.getElementById("hero-attack-left");
-const heroAttackAnimationRight = document.getElementById("hero-attack-right");
-const heroCrouchAnimationLeft = document.getElementById("hero-crouch-left");
-const heroCrouchAnimationRight = document.getElementById("hero-crouch-right");
-const heroHurtAnimationLeft = document.getElementById("hero-hurt-left");
-const heroHurtAnimationRight = document.getElementById("hero-hurt-right");
+const heroIdleAnimationLeft     =    document.getElementById("hero-idle-left");
+const heroIdleAnimationRight    =    document.getElementById("hero-idle-right");
+const heroRunAnimationLeft      =    document.getElementById("hero-run-left");
+const heroRunAnimationRight     =    document.getElementById("hero-run-right");
+const heroJumpAnimationLeft     =    document.getElementById("hero-jump-left");
+const heroJumpAnimationRight    =    document.getElementById("hero-jump-right");
+const heroAttackAnimationLeft   =    document.getElementById("hero-attack-left");
+const heroAttackAnimationRight  =    document.getElementById("hero-attack-right");
+const heroCrouchAnimationLeft   =    document.getElementById("hero-crouch-left");
+const heroCrouchAnimationRight  =    document.getElementById("hero-crouch-right");
+const heroHurtAnimationLeft     =    document.getElementById("hero-hurt-left");
+const heroHurtAnimationRight    =    document.getElementById("hero-hurt-right");
 
 let heroAnimations = [
-    [heroIdleAnimationLeft, 4],
-    [heroIdleAnimationRight, 4],
-    [heroRunAnimationLeft, 6],
-    [heroRunAnimationRight, 6],
-    [heroJumpAnimationLeft, 4],
-    [heroJumpAnimationRight, 4],
-    [heroAttackAnimationLeft, 5],
-    [heroAttackAnimationRight, 5],
-    [heroCrouchAnimationLeft, 1],
-    [heroCrouchAnimationRight, 1],
-    [heroHurtAnimationLeft, 1],
-    [heroHurtAnimationRight, 1],
+    [heroIdleAnimationLeft,     4],
+    [heroIdleAnimationRight,    4],
+    [heroRunAnimationLeft,      6],
+    [heroRunAnimationRight,     6],
+    [heroJumpAnimationLeft,     4],
+    [heroJumpAnimationRight,    4],
+    [heroAttackAnimationLeft,   5],
+    [heroAttackAnimationRight,  5],
+    [heroCrouchAnimationLeft,   1],
+    [heroCrouchAnimationRight,  1],
+    [heroHurtAnimationLeft,     1],
+    [heroHurtAnimationRight,    1],
 ]
 
 let heroAnimationIndex = 1;
@@ -79,6 +79,7 @@ const TILE_SIZE = 32;
 let distanceFromFloor = 0;
 let nearestFloorHeight = TILE_SIZE;
 let newJumpPress = false;
+let attackCompleted = false;
 
 let hero = {
     spriteWidth: 100,
@@ -98,7 +99,6 @@ var drawTile = function(x, y, tileIndex) {
 }
 
 var drawLevelTiles = function(level, hTiles, vTiles, scrollX) {
-    // console.log(level)
     for (var i=0; i<hTiles; i++) {
         for (var j=0; j<vTiles; j++) {
             if (level[j][i] != 0) {
@@ -117,15 +117,23 @@ var checkSpriteTileCollision = function(sprite, tileX, tileY, tileIndex, collisi
                     x: Math.max(sprite.levelX,tileX),
                     y: Math.max(sprite.levelY,tileY),
                 }
-                intersect.width = Math.min(sprite.levelX + sprite.spriteWidth, tileX + TILE_SIZE) - intersect.x;
-                intersect.height = Math.min(sprite.levelY + sprite.spriteHeight, tileY + TILE_SIZE) - intersect.y;
-                if (sprite.levelX+sprite.spriteWidth/2 > tileX+TILE_SIZE/2 && intersect.height > intersect.width) collisions.left = true;
-                if (sprite.levelX+sprite.spriteWidth/2 < tileX+TILE_SIZE/2 && intersect.height > intersect.width) collisions.right = true;
-                if (sprite.levelY+sprite.spriteHeight/2 < tileY+TILE_SIZE/2 && intersect.width > intersect.height && intersect.width > 4) {
+                intersect.width = Math.min(sprite.levelX + sprite.spriteWidth, 
+                    tileX + TILE_SIZE) - intersect.x;
+                intersect.height = Math.min(sprite.levelY + sprite.spriteHeight, 
+                    tileY + TILE_SIZE) - intersect.y;
+                if (sprite.levelX+sprite.spriteWidth/2 > tileX+TILE_SIZE/2 && 
+                    intersect.height > intersect.width) collisions.left = true;
+                if (sprite.levelX+sprite.spriteWidth/2 < tileX+TILE_SIZE/2 && 
+                    intersect.height > intersect.width) collisions.right = true;
+                if (sprite.levelY+sprite.spriteHeight/2 < tileY+TILE_SIZE/2 && 
+                    intersect.width > intersect.height && intersect.width > 4) {
                     collisions.top = true;
                     collisions.topY = tileY;
                 }
-                if (sprite.levelY+sprite.spriteHeight/2 > tileY+TILE_SIZE/2 && intersect.width > intersect.height && intersect.width > 4) collisions.bottom = true;
+                if (sprite.levelY+sprite.spriteHeight/2 > tileY+TILE_SIZE/2 && 
+                    intersect.width > intersect.height && intersect.width > 4) {
+                        collisions.bottom = true;
+                }
         }
 }
 
@@ -142,7 +150,8 @@ var checkSpriteTileCollisions = function(sprite, level) {
     for (let i=0; i<levelWidth; i++) {
         for (let j=0; j<levelHeight; j++) {
             if (level[j][i] != 0) {
-                checkSpriteTileCollision(sprite, i*TILE_SIZE, j*TILE_SIZE, level[j][i], collisions);
+                checkSpriteTileCollision(sprite, i*TILE_SIZE, 
+                    j*TILE_SIZE, level[j][i], collisions);
             }
         }
     }
@@ -156,8 +165,10 @@ var gameLoop = function(interval) {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
     /* Update scroll position */
-    if (hero.levelX + hero.spriteWidth/2 >= SCREEN_WIDTH/2 && scrollX+SCREEN_WIDTH < levels[0][0].length*TILE_SIZE ||
-        (hero.levelX + SCREEN_WIDTH/2 + hero.spriteWidth/2 <= levels[0][0].length*TILE_SIZE && scrollX > 0)) {
+    if (hero.levelX + hero.spriteWidth/2 >= SCREEN_WIDTH/2 && 
+        scrollX+SCREEN_WIDTH < levels[0][0].length*TILE_SIZE ||
+        (hero.levelX + SCREEN_WIDTH/2 + hero.spriteWidth/2 <= 
+        levels[0][0].length*TILE_SIZE && scrollX > 0)) {
         scrollX = hero.levelX - SCREEN_WIDTH/2 + hero.spriteWidth/2;
     }
     hero.renderX = hero.levelX - scrollX;
@@ -182,14 +193,23 @@ var gameLoop = function(interval) {
     drawLevelTiles(levels[0], 51, 15, scrollX);
 
     /* Draw Hero */
-    let currentFrame = Math.floor((((Date.now()-resetAnimationTime)/100) % heroAnimations[heroAnimationIndex][1]));
-    if ((heroAnimationIndex==4 || heroAnimationIndex==5) && heroJumping && currentFrame == heroAnimations[heroAnimationIndex][1] - 1) {
+    let currentFrame = Math.floor((((Date.now()-resetAnimationTime)/100) % 
+        heroAnimations[heroAnimationIndex][1]));
+    if ((heroAnimationIndex==4 || heroAnimationIndex==5) && heroJumping && 
+        currentFrame == heroAnimations[heroAnimationIndex][1] - 1) {
         heroPeakJumping = true;
     }
-    if ((heroAnimationIndex==4 || heroAnimationIndex==5) && heroPeakJumping) currentFrame = heroAnimations[heroAnimationIndex][1] - 1;
+    if ((heroAnimationIndex==4 || heroAnimationIndex==5) && heroPeakJumping) {
+        currentFrame = heroAnimations[heroAnimationIndex][1] - 1;
+    }
     // Left facing, reverse order of frames since images are flipped
-    if (heroDirection == 0) currentFrame = heroAnimations[heroAnimationIndex][1] - currentFrame - 1; 
-    context.drawImage(heroAnimations[heroAnimationIndex][0], currentFrame*hero.spriteWidth, 0, hero.spriteWidth, hero.spriteHeight, hero.renderX, hero.renderY, hero.spriteWidth, hero.spriteHeight);
+    if (heroDirection == 0) {
+        currentFrame = heroAnimations[heroAnimationIndex][1] - currentFrame - 1; 
+    }
+    context.drawImage(heroAnimations[heroAnimationIndex][0], 
+        currentFrame*hero.spriteWidth, 0, hero.spriteWidth, 
+        hero.spriteHeight, hero.renderX, hero.renderY, 
+        hero.spriteWidth, hero.spriteHeight);
 
     let collisions = checkSpriteTileCollisions({
         levelX: hero.levelX+25,
@@ -198,7 +218,7 @@ var gameLoop = function(interval) {
         spriteHeight: hero.spriteHeight
     }, levels[0]);
 
-    let hoverjump = true;
+    let hoverjump = false;
 
     /* A */
     if (pressedKeys["65"]) {
@@ -211,7 +231,8 @@ var gameLoop = function(interval) {
 
     /* D */
     if (pressedKeys["68"]) {
-        if (hero.levelX + hero.spriteWidth - 25 < levels[0][0].length*TILE_SIZE && !collisions.right) {
+        if (hero.levelX + hero.spriteWidth - 25 < 
+            levels[0][0].length*TILE_SIZE && !collisions.right) {
             hero.levelX += 240*interval;
         }
         heroAnimationIndex = 3;
@@ -235,11 +256,33 @@ var gameLoop = function(interval) {
     /* K */
     if (pressedKeys["75"]) {
         if (heroDirection) {
-            heroAnimationIndex = 7;
+            if (currentFrame == 4 && previousHeroAnimationIndex == 7) {
+                attackCompleted = true;
+            }
+            if (attackCompleted && pressedKeys["68"]) {
+                heroAnimationIndex = 3;
+            }  else if (attackCompleted && 
+                !(pressedKeys[65] || pressedKeys[68])) {
+                heroAnimationIndex = 1;
+            } else {
+                heroAnimationIndex = 7;
+            }
         }
         else {
-            heroAnimationIndex = 6;
+            if (currentFrame == 0 && previousHeroAnimationIndex == 6) {
+                attackCompleted = true;
+            }
+            if (attackCompleted && pressedKeys["65"]) {    
+                heroAnimationIndex = 2;
+            } else if (attackCompleted && 
+                !(pressedKeys[65] || pressedKeys[68])) {
+                heroAnimationIndex = 0;
+            } else {
+                heroAnimationIndex = 6;
+            }
         }
+    } else {
+        attackCompleted = false;
     }
 
     /* W */
@@ -260,17 +303,20 @@ var gameLoop = function(interval) {
     }
 
     /* Physics */
-    if ((hero.velocityY >= 0 && collisions.top)) nearestFloorHeight = SCREEN_HEIGHT-collisions.topY;
-    else nearestFloorHeight = TILE_SIZE;
+    if ((hero.velocityY >= 0 && collisions.top)) {
+        nearestFloorHeight = SCREEN_HEIGHT-collisions.topY;
+    } else nearestFloorHeight = TILE_SIZE;
 
-    distanceFromFloor = SCREEN_HEIGHT - nearestFloorHeight - (hero.levelY + hero.spriteHeight);
+    distanceFromFloor = SCREEN_HEIGHT - 
+        nearestFloorHeight - (hero.levelY + hero.spriteHeight);
     if (distanceFromFloor > 0 && !(hoverjump && heroJumping)) {
         hero.velocityY += 0.5;      /* Gravity */
     } else {
         hero.velocityY = 0;
     }
     if (distanceFromFloor <= 0) {
-        hero.levelY = SCREEN_HEIGHT - nearestFloorHeight - hero.spriteHeight;
+        hero.levelY = SCREEN_HEIGHT - nearestFloorHeight - 
+            hero.spriteHeight;
     }
 
     /* Hover Jump */
@@ -284,7 +330,8 @@ var gameLoop = function(interval) {
         }
     } else {
         /* Traditional Jump */
-        if (heroJumping && !newJumpPress && distanceFromFloor <= 0 && !jumpPressedLastFrame) {
+        if (heroJumping && !newJumpPress && 
+            distanceFromFloor <= 0 && !jumpPressedLastFrame) {
             newJumpPress = true;
         } else newJumpPress = false;
         if (newJumpPress) {
@@ -293,12 +340,12 @@ var gameLoop = function(interval) {
         }
     }
 
-    if ((hero.velocityY > 0 && collisions.top) || (hero.velocityY < 0 && collisions.bottom)) {
+    if ((hero.velocityY > 0 && collisions.top) || 
+        (hero.velocityY < 0 && hero.levelY <= -10) ||
+        (hero.velocityY < 0 && collisions.bottom)) {
         hero.velocityY = 0;
     }
     hero.levelY += hero.velocityY;
-
-    console.log(collisions);
 
     jumpPressedLastFrame = pressedKeys["87"];
     previousHeroAnimationIndex = heroAnimationIndex;
