@@ -232,8 +232,9 @@ var titleScreenLoop = function(now, oldTime) {
         currentFrame*hero.spriteWidth, 0, hero.spriteWidth, 
         hero.spriteHeight, SCREEN_WIDTH/2-100, 280, 
         200, 59*2);
-    if (pressedKeys["13"]) {
+    if (pressedKeys["13"] || (enterPressedInitially && !beyondTitleScreen)) {
         gameStarted = true;
+        beyondTitleScreen = true;
     }
 }
 
@@ -524,25 +525,62 @@ var gameLoop = function(interval) {
     }
 }
 
+/* Set FPS */
 let FPS = 60;
 let interval = 1 / FPS;
 let frameCounter = 0;
 let oldTime = Date.now();
 let previousFrameTime = oldTime;
+
+/* Load Current Level */
 currentLevel = JSON.parse(JSON.stringify(levels[0]));
+
+/* Load Game Music */
+var audioElement = document.getElementById("theAudio");
+audioElement.load();
+audioElement.volume = 0.6;
+var audioPlaying = false;
+
+/* For Safari Audio Compatibility */
+var enterPressedInitially = false;
+var beyondTitleScreen = false;
+onInitialEnterPress = function(e) {
+    if (e.key == "Enter") {
+        enterPressedInitially = true;
+        audioElement.play();
+    }
+}
+document.addEventListener('keypress', onInitialEnterPress);
 
 /* Game States */
 setInterval(function() {
     let now = Date.now();
     if (!gameStarted) {
         if (gameOver) {
+            if (audioPlaying) {
+                audioElement.pause();
+                audioPlaying = false;
+            }
             gameOverScreen(now, oldTime);
         } else if (demoComplete){
             demoCompleteScreen(now, oldTime);
         } else {
+            if (audioPlaying) {
+                audioElement.pause();
+                audioPlaying = false;
+            }
             titleScreenLoop(now, oldTime);
         }
     } else {
+        if (!audioPlaying) {
+            audioElement.currentTime = 0;
+            if (enterPressedInitially) {
+                audioElement.play();
+                document.removeEventListener('keypress', 
+                    onInitialEnterPress);
+            }
+            audioPlaying = true;
+        }
         gameLoop(interval);
         context.font = "28px Luminari, fantasy";
         context.fillStyle = "rgb(255, 247, 227)";
@@ -555,3 +593,4 @@ setInterval(function() {
         oldTime = Date.now();
     }
 }, interval * 1000);
+
