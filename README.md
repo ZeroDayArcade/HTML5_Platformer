@@ -41,7 +41,7 @@ In most cases you can just download the repo and double-click the index.html fil
 You can serve the game locally by cloning the project and running a local server: <br/><br/>
 Clone repo:
 ```
-git clone https://github.com/ZeroDayArcade/HTML5_Platformer
+git clone https://github.com/ZeroDayArcade/HTML5_Platformer.git
 ```
 
 cd into project directory:
