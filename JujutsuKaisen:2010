@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Asato Hurama: Mobile Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { margin:0; background:#111; color:white; font-family:Arial; overflow:hidden; }
+  canvas { display:block; margin:0 auto; background:#222; border:2px solid #fff; }
+</style>
+</head>
+<body>
+<h2 style="text-align:center;">Asato Hurama: Tutorial dengan Yaga (Demo Mobile)</h2>
+<canvas id="game" width="320" height="240"></canvas>
+<p style="text-align:center;">Arrow ← → = Gerak | Arrow ↑ = Lompat | Space = Serang tangan kidal</p>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+// Game objects
+let player = {x:50, y:180, w:16, h:32, color:"cyan", vy:0, grounded:true, health:3};
+let yaga = {x:150, y:180, w:16, h:32, color:"orange"};
+let enemies = [
+  {x:300, y:180, w:16, h:16, color:"red", alive:true},
+  {x:350, y:180, w:16, h:16, color:"red", alive:true}
+];
+let keys = {};
+let score = 0;
+let gameOver = false;
+
+// Keyboard input
+document.addEventListener("keydown", e=>keys[e.key]=true);
+document.addEventListener("keyup", e=>keys[e.key]=false);
+
+function update() {
+  if(gameOver) return;
+
+  // Gravity
+  if(!player.grounded) player.vy += 0.5;
+  player.y += player.vy;
+  if(player.y >= 180){ player.y=180; player.vy=0; player.grounded=true;}
+
+  // Movement
+  if(keys["ArrowLeft"]) player.x-=2;
+  if(keys["ArrowRight"]) player.x+=2;
+  if(keys["ArrowUp"] && player.grounded){ player.vy=-6; player.grounded=false;}
+
+  // Attack (tangan kidal)
+  if(keys[" "]){
+    enemies.forEach(e=>{
+      if(e.alive && player.x+player.w >= e.x && player.x <= e.x+e.w && player.y+player.h >= e.y){
+        e.alive=false;
+        score+=10;
+      }
+    });
+  }
+
+  // Collision with enemies
+  enemies.forEach(e=>{
+    if(e.alive && player.x < e.x+e.w && player.x+player.w > e.x && player.y < e.y+e.h && player.y+player.h > e.y){
+      player.health--;
+      e.alive=false;
+      if(player.health<=0){
+        gameOver=true;
+        alert("Game Over! Asato kalah!");
+      }
+    }
+  });
+
+  draw();
+  requestAnimationFrame(update);
+}
+
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Ground
+  ctx.fillStyle="#444";
+  ctx.fillRect(0,212,320,28);
+
+  // Player (Asato)
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+
+  // Yaga (mentor)
+  ctx.fillStyle = yaga.color;
+  ctx.fillRect(yaga.x, yaga.y, yaga.w, yaga.h);
+  ctx.fillStyle="white";
+  ctx.fillText("Yaga", yaga.x-5, yaga.y-5);
+
+  // Enemies
+  enemies.forEach(e=>{if(e.alive){ctx.fillStyle=e.color; ctx.fillRect(e.x, e.y, e.w, e.h);}});
+
+  // Score & Health
+  ctx.fillStyle="white";
+  ctx.fillText("Score: "+score, 10, 10);
+  ctx.fillText("Health: "+player.health, 10, 22);
+}
+
+// Start game
+update();
+</script>
+</body>
+</html>
