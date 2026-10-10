@@ -65,6 +65,18 @@ let gameOver = false;
 let demoComplete = false;
 
 var levels = window.gameLevels || [];
+let currentLevelIndex = 0;
+
+if (levels.length === 0) {
+    throw new Error("No levels loaded. Check the level script tags in index.html.");
+}
+
+var loadLevel = function(levelIndex) {
+    if (!levels[levelIndex]) {
+        throw new Error("Level " + levelIndex + " does not exist.");
+    }
+    currentLevel = JSON.parse(JSON.stringify(levels[levelIndex]));
+}
 
 const SCREEN_WIDTH = 816;
 const SCREEN_HEIGHT = 480;
@@ -191,7 +203,7 @@ var resetGame = function() {
         renderY: 480-32-59,
         velocityY: 0,
     };
-    currentLevel = JSON.parse(JSON.stringify(levels[0]));
+    loadLevel(currentLevelIndex);
     scrollX = 0;
     points = 0;
     hoverjump = false;
@@ -514,8 +526,16 @@ var gameLoop = function(interval) {
 
     if (hero.levelX + hero.spriteWidth/2 >= 
         TILE_SIZE*currentLevel[0].length) {
-        demoComplete = true;
-        gameStarted = false;
+        if (currentLevelIndex < levels.length - 1) {
+            // Keep the run score while resetGame prepares the next level.
+            let score = points;
+            currentLevelIndex++;
+            resetGame();
+            points = score;
+        } else {
+            demoComplete = true;
+            gameStarted = false;
+        }
     }
 
     if (hero.levelY >= SCREEN_HEIGHT) {
@@ -532,7 +552,7 @@ let oldTime = Date.now();
 let previousFrameTime = oldTime;
 
 /* Load Current Level */
-currentLevel = JSON.parse(JSON.stringify(levels[0]));
+loadLevel(currentLevelIndex);
 
 /* Game States */
 setInterval(function() {
