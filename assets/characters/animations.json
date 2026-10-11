@@ -1,0 +1,94 @@
+{
+  "frameSize": [
+    128,
+    96
+  ],
+  "feetBaselineY": 92,
+  "rendering": "nearest-neighbor",
+  "animations": {
+    "james": {
+      "idle_left": {
+        "fps": 3,
+        "frames": [
+          "james/idle_left/000.png",
+          "james/idle_left/001.png",
+          "james/idle_left/002.png",
+          "james/idle_left/003.png"
+        ]
+      },
+      "run_left": {
+        "fps": 9,
+        "frames": [
+          "james/run_left/000.png",
+          "james/run_left/001.png",
+          "james/run_left/002.png",
+          "james/run_left/003.png",
+          "james/run_left/004.png",
+          "james/run_left/005.png"
+        ]
+      },
+      "idle_right": {
+        "fps": 3,
+        "frames": [
+          "james/idle_right/000.png",
+          "james/idle_right/001.png",
+          "james/idle_right/002.png",
+          "james/idle_right/003.png"
+        ]
+      },
+      "run_right": {
+        "fps": 9,
+        "frames": [
+          "james/run_right/000.png",
+          "james/run_right/001.png",
+          "james/run_right/002.png",
+          "james/run_right/003.png",
+          "james/run_right/004.png",
+          "james/run_right/005.png"
+        ]
+      }
+    },
+    "sonia": {
+      "idle_left": {
+        "fps": 3,
+        "frames": [
+          "sonia/idle_left/000.png",
+          "sonia/idle_left/001.png",
+          "sonia/idle_left/002.png",
+          "sonia/idle_left/003.png"
+        ]
+      },
+      "run_left": {
+        "fps": 9,
+        "frames": [
+          "sonia/run_left/000.png",
+          "sonia/run_left/001.png",
+          "sonia/run_left/002.png",
+          "sonia/run_left/003.png",
+          "sonia/run_left/004.png",
+          "sonia/run_left/005.png"
+        ]
+      },
+      "idle_right": {
+        "fps": 3,
+        "frames": [
+          "sonia/idle_right/000.png",
+          "sonia/idle_right/001.png",
+          "sonia/idle_right/002.png",
+          "sonia/idle_right/003.png"
+        ]
+      },
+      "run_right": {
+        "fps": 9,
+        "frames": [
+          "sonia/run_right/000.png",
+          "sonia/run_right/001.png",
+          "sonia/run_right/002.png",
+          "sonia/run_right/003.png",
+          "sonia/run_right/004.png",
+          "sonia/run_right/005.png"
+        ]
+      }
+    }
+  }
+}

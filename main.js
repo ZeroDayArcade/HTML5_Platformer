@@ -1,5 +1,6 @@
 const canvas = document.getElementById('main_screen');
 const context = canvas.getContext("2d");
+context.imageSmoothingEnabled = false;
 var pressedKeys = {};
 window.onkeyup   = function(e) { pressedKeys[e.keyCode] = false; }
 window.onkeydown = function(e) { pressedKeys[e.keyCode] = true;  }
@@ -16,10 +17,6 @@ const layers = [
 
 const tiles = document.getElementById("tiles");
 
-const heroIdleAnimationLeft     =    document.getElementById("hero-idle-left");
-const heroIdleAnimationRight    =    document.getElementById("hero-idle-right");
-const heroRunAnimationLeft      =    document.getElementById("hero-run-left");
-const heroRunAnimationRight     =    document.getElementById("hero-run-right");
 const heroJumpAnimationLeft     =    document.getElementById("hero-jump-left");
 const heroJumpAnimationRight    =    document.getElementById("hero-jump-right");
 const heroAttackAnimationLeft   =    document.getElementById("hero-attack-left");
@@ -29,20 +26,49 @@ const heroCrouchAnimationRight  =    document.getElementById("hero-crouch-right"
 const heroHurtAnimationLeft     =    document.getElementById("hero-hurt-left");
 const heroHurtAnimationRight    =    document.getElementById("hero-hurt-right");
 
+var getFrameImages = function(prefix, frameCount) {
+    return Array.from({ length: frameCount }, function(_, index) {
+        return document.getElementById(prefix + "-" + String(index).padStart(2, "0"));
+    });
+}
+
 let heroAnimations = [
-    [heroIdleAnimationLeft,     4],
-    [heroIdleAnimationRight,    4],
-    [heroRunAnimationLeft,      6],
-    [heroRunAnimationRight,     6],
-    [heroJumpAnimationLeft,     4],
-    [heroJumpAnimationRight,    4],
-    [heroAttackAnimationLeft,   5],
-    [heroAttackAnimationRight,  5],
-    [heroCrouchAnimationLeft,   1],
-    [heroCrouchAnimationRight,  1],
-    [heroHurtAnimationLeft,     1],
-    [heroHurtAnimationRight,    1],
+    { frames: getFrameImages("hero-idle-left", 4), fps: 3 },
+    { frames: getFrameImages("hero-idle-right", 4), fps: 3 },
+    { frames: getFrameImages("hero-run-left", 6), fps: 10 },
+    { frames: getFrameImages("hero-run-right", 6), fps: 10 },
+    { sheet: heroJumpAnimationLeft, frameCount: 4, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
+    { sheet: heroJumpAnimationRight, frameCount: 4, frameWidth: 100, frameHeight: 59, fps: 10 },
+    { sheet: heroAttackAnimationLeft, frameCount: 5, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
+    { sheet: heroAttackAnimationRight, frameCount: 5, frameWidth: 100, frameHeight: 59, fps: 10 },
+    { sheet: heroCrouchAnimationLeft, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
+    { sheet: heroCrouchAnimationRight, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10 },
+    { sheet: heroHurtAnimationLeft, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
+    { sheet: heroHurtAnimationRight, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10 },
 ]
+
+var getAnimationFrame = function(animationIndex, elapsedMs) {
+    let animation = heroAnimations[animationIndex];
+    let frameCount = animation.frames ? animation.frames.length : animation.frameCount;
+    return Math.floor(elapsedMs * animation.fps / 1000) % frameCount;
+}
+
+var drawHeroFrame = function(animationIndex, frameIndex, x, y, width, height) {
+    let animation = heroAnimations[animationIndex];
+    if (animation.frames) {
+        let frame = animation.frames[frameIndex];
+        if (frame.complete && frame.naturalWidth > 0) {
+            context.drawImage(frame, x, y, width, height);
+        }
+        return;
+    }
+
+    if (animation.reverseFrameOrder) {
+        frameIndex = animation.frameCount - frameIndex - 1;
+    }
+    context.drawImage(animation.sheet, frameIndex * animation.frameWidth, 0,
+        animation.frameWidth, animation.frameHeight, x, y, width, height);
+}
 
 let heroAnimationIndex = 1;
 let heroDirection = 1;
@@ -81,18 +107,21 @@ var loadLevel = function(levelIndex) {
 const SCREEN_WIDTH = 816;
 const SCREEN_HEIGHT = 480;
 const TILE_SIZE = 32;
+const HERO_WIDTH = 128;
+const HERO_HEIGHT = 96;
+const HERO_HITBOX_WIDTH = 50;
 let distanceFromFloor = 0;
-let nearestFloorHeight = -59;
+let nearestFloorHeight = -HERO_HEIGHT;
 let newJumpPress = false;
 let attackCompleted = false;
 
 let hero = {
-    spriteWidth: 100,
-    spriteHeight: 59,
+    spriteWidth: HERO_WIDTH,
+    spriteHeight: HERO_HEIGHT,
     levelX: 140,
-    levelY: 480-32-59,
+    levelY: SCREEN_HEIGHT-TILE_SIZE-HERO_HEIGHT,
     renderX: 100,
-    renderY: 480-32-59,
+    renderY: SCREEN_HEIGHT-TILE_SIZE-HERO_HEIGHT,
     velocityY: 0,
 }
 
@@ -195,12 +224,12 @@ var checkSpriteTileCollisions = function(sprite, level) {
 /* Reset Game and Level */
 var resetGame = function() {
     hero = {
-        spriteWidth: 100,
-        spriteHeight: 59,
+        spriteWidth: HERO_WIDTH,
+        spriteHeight: HERO_HEIGHT,
         levelX: 140,
-        levelY: 480-32-59,
+        levelY: SCREEN_HEIGHT-TILE_SIZE-HERO_HEIGHT,
         renderX: 100,
-        renderY: 480-32-59,
+        renderY: SCREEN_HEIGHT-TILE_SIZE-HERO_HEIGHT,
         velocityY: 0,
     };
     loadLevel(currentLevelIndex);
@@ -218,7 +247,7 @@ var resetGame = function() {
     previousHeroAnimationIndex = 1;
     points = 0;
     distanceFromFloor = 0;
-    nearestFloorHeight = -59;
+    nearestFloorHeight = -HERO_HEIGHT;
     newJumpPress = false;
     attackCompleted = false;
 }
@@ -237,12 +266,9 @@ var titleScreenLoop = function(now, oldTime) {
     context.fillStyle = "rgb(255, 247, 227, " + 
         (0.75+0.15*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
     context.fillText("Press Enter", 240, 260);
-    let currentFrame = Math.floor((((Date.now())/100) % 
-        heroAnimations[heroAnimationIndex][1]));
-    context.drawImage(heroAnimations[heroAnimationIndex][0], 
-        currentFrame*hero.spriteWidth, 0, hero.spriteWidth, 
-        hero.spriteHeight, SCREEN_WIDTH/2-100, 280, 
-        200, 59*2);
+    let currentFrame = getAnimationFrame(heroAnimationIndex, Date.now());
+    drawHeroFrame(heroAnimationIndex, currentFrame, SCREEN_WIDTH/2-100, 280,
+        200, 150);
     if (pressedKeys["13"] || (enterPressedInitially && !beyondTitleScreen)) {
         gameStarted = true;
         beyondTitleScreen = true;
@@ -260,12 +286,8 @@ var gameOverScreen = function(now, oldTime) {
     context.fillStyle = "rgb(255, 247, 227, " + 
         (0.50+0.10*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
     context.fillText("Press ESC to Exit", 170, 260);
-    let currentFrame = Math.floor((((Date.now())/100) % 
-        heroAnimations[11][1]));
-    context.drawImage(heroAnimations[11][0], 
-        currentFrame*hero.spriteWidth, 0, hero.spriteWidth, 
-        hero.spriteHeight, SCREEN_WIDTH/2-100, 280, 
-        200, 59*2);
+    let currentFrame = getAnimationFrame(11, Date.now());
+    drawHeroFrame(11, currentFrame, SCREEN_WIDTH/2-100, 280, 200, 150);
     if (pressedKeys["27"]) {
         resetGame();
         gameOver = false;
@@ -287,12 +309,8 @@ var demoCompleteScreen = function(now, oldTime) {
     context.fillStyle = "rgb(255, 247, 227, " + 
         (0.50+0.10*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
     context.fillText("Press ESC to Exit", 200, 290);
-    let currentFrame = Math.floor((((Date.now())/100) % 
-        heroAnimations[3][1]));
-    context.drawImage(heroAnimations[3][0], 
-        currentFrame*hero.spriteWidth, 0, hero.spriteWidth, 
-        hero.spriteHeight, SCREEN_WIDTH/2-100, 280, 
-        200, 59*2);
+    let currentFrame = getAnimationFrame(3, Date.now());
+    drawHeroFrame(3, currentFrame, SCREEN_WIDTH/2-100, 280, 200, 150);
     if (pressedKeys["27"]) {
         resetGame();
         demoComplete = false;
@@ -334,34 +352,30 @@ var gameLoop = function(interval) {
     drawLevelTiles(currentLevel, currentLevel[0].length, currentLevel.length, scrollX);
 
     /* Draw Hero */
-    let currentFrame = Math.floor((((Date.now()-resetAnimationTime)/100) % 
-        heroAnimations[heroAnimationIndex][1]));
+    let animation = heroAnimations[heroAnimationIndex];
+    let currentFrame = getAnimationFrame(heroAnimationIndex,
+        Date.now()-resetAnimationTime);
+    let frameCount = animation.frames ? animation.frames.length : animation.frameCount;
     if ((heroAnimationIndex==4 || heroAnimationIndex==5) && heroJumping && 
-        currentFrame == heroAnimations[heroAnimationIndex][1] - 1) {
+        currentFrame == frameCount - 1) {
         heroPeakJumping = true;
     }
     if ((heroAnimationIndex==4 || heroAnimationIndex==5) && heroPeakJumping) {
-        currentFrame = heroAnimations[heroAnimationIndex][1] - 1;
+        currentFrame = frameCount - 1;
     }
-    // Left facing, reverse order of frames since images are flipped
-    if (heroDirection == 0) {
-        currentFrame = heroAnimations[heroAnimationIndex][1] - currentFrame - 1; 
-    }
-    context.drawImage(heroAnimations[heroAnimationIndex][0], 
-        currentFrame*hero.spriteWidth, 0, hero.spriteWidth, 
-        hero.spriteHeight, hero.renderX, hero.renderY, 
+    drawHeroFrame(heroAnimationIndex, currentFrame, hero.renderX, hero.renderY,
         hero.spriteWidth, hero.spriteHeight);
 
     let collisions = checkSpriteTileCollisions({
-        levelX: hero.levelX+25,
+        levelX: hero.levelX+(hero.spriteWidth-HERO_HITBOX_WIDTH)/2,
         levelY: hero.levelY,
-        spriteWidth: 50,
+        spriteWidth: HERO_HITBOX_WIDTH,
         spriteHeight: hero.spriteHeight
     }, currentLevel);
 
     /* A */
     if (pressedKeys["65"]) {
-        if (hero.levelX > -25 && !collisions.left) {
+        if (hero.levelX > -(hero.spriteWidth-HERO_HITBOX_WIDTH)/2 && !collisions.left) {
             hero.levelX -= 240*interval;
         }
         heroAnimationIndex = 2;
@@ -370,7 +384,7 @@ var gameLoop = function(interval) {
 
     /* D */
     if (pressedKeys["68"]) {
-        if (hero.levelX + hero.spriteWidth - 25 - 30 < 
+        if (hero.levelX + (hero.spriteWidth+HERO_HITBOX_WIDTH)/2 - 30 <
             currentLevel[0].length*TILE_SIZE && !collisions.right) {
             hero.levelX += 240*interval;
         }
@@ -490,9 +504,9 @@ var gameLoop = function(interval) {
     let touchedWings = {top: false, topY:null, 
         bottom:false, left: false, right: false};
     checkSpriteTileCollision({
-        levelX: hero.levelX+25,
+        levelX: hero.levelX+(hero.spriteWidth-HERO_HITBOX_WIDTH)/2,
         levelY: hero.levelY,
-        spriteWidth: 50,
+        spriteWidth: HERO_HITBOX_WIDTH,
         spriteHeight: hero.spriteHeight
     }, 82*TILE_SIZE, 13*TILE_SIZE, 10, touchedWings);
     if (touchedWings.top || touchedWings.bottom || 
@@ -508,9 +522,9 @@ var gameLoop = function(interval) {
     let touchedCross = {top: false, topY:null, 
         bottom:false, left: false, right: false};
     checkSpriteTileCollision({
-        levelX: hero.levelX+25,
+        levelX: hero.levelX+(hero.spriteWidth-HERO_HITBOX_WIDTH)/2,
         levelY: hero.levelY,
-        spriteWidth: 50,
+        spriteWidth: HERO_HITBOX_WIDTH,
         spriteHeight: hero.spriteHeight
     }, 102*TILE_SIZE, 2*TILE_SIZE, 10, touchedCross);
     if (touchedCross.top || touchedCross.bottom || 
