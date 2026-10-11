@@ -49,18 +49,17 @@ var getAnimationFrame = function(animationIndex, elapsedMs) {
 
 var drawHeroFrame = function(animationIndex, frameIndex, x, y, width, height) {
     let animation = heroAnimations[animationIndex];
-    let drawY = y + (animationIndex === 6 || animationIndex === 7 ? 10 : 0);
     if (animation.frames) {
         let frame = animation.frames[frameIndex];
         if (frame && frame.complete && frame.naturalWidth > 0) {
             if (animation.mirrorX) {
                 context.save();
-                context.translate(x + width, drawY);
+                context.translate(x + frame.naturalWidth, y);
                 context.scale(-1, 1);
-                context.drawImage(frame, 0, 0, width, height);
+                context.drawImage(frame, 0, 0);
                 context.restore();
             } else {
-                context.drawImage(frame, x, drawY, width, height);
+                context.drawImage(frame, x, y);
             }
         }
         return;
