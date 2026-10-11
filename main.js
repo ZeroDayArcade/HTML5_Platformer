@@ -17,11 +17,9 @@ const layers = [
 
 const tiles = document.getElementById("tiles");
 
-const heroAttackAnimationLeft   =    document.getElementById("hero-attack-left");
-const heroAttackAnimationRight  =    document.getElementById("hero-attack-right");
-const heroCrouchAnimationLeft   =    document.getElementById("hero-crouch-left");
-const heroCrouchAnimationRight  =    document.getElementById("hero-crouch-right");
-const heroHurtAnimationLeft     =    document.getElementById("hero-hurt-left");
+const heroAttackAnimationRight  =    Array.from({ length: 8 }, function(_, index) {
+    return document.getElementById("hero-attack-right-" + String(index).padStart(2, "0"));
+});
 const heroHurtAnimationRight    =    document.getElementById("hero-hurt-right");
 
 var getFrameImages = function(prefix, frameCount) {
@@ -31,17 +29,15 @@ var getFrameImages = function(prefix, frameCount) {
 }
 
 let heroAnimations = [
-    { frames: getFrameImages("hero-idle-left", 2), fps: 3 },
+    { frames: getFrameImages("hero-idle-right", 2), fps: 3, mirrorX: true },
     { frames: getFrameImages("hero-idle-right", 2), fps: 3 },
-    { frames: getFrameImages("hero-run-left", 6), fps: 10 },
+    { frames: getFrameImages("hero-run-right", 6), fps: 10, mirrorX: true },
     { frames: getFrameImages("hero-run-right", 6), fps: 10 },
-    { frames: getFrameImages("hero-jump-left", 8), fps: 10 },
+    { frames: getFrameImages("hero-jump-right", 8), fps: 10, mirrorX: true },
     { frames: getFrameImages("hero-jump-right", 8), fps: 10 },
-    { sheet: heroAttackAnimationLeft, frameCount: 5, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
-    { sheet: heroAttackAnimationRight, frameCount: 5, frameWidth: 100, frameHeight: 59, fps: 10 },
-    { sheet: heroCrouchAnimationLeft, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
-    { sheet: heroCrouchAnimationRight, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10 },
-    { sheet: heroHurtAnimationLeft, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
+    { frames: heroAttackAnimationRight, fps: 10, mirrorX: true },
+    { frames: heroAttackAnimationRight, fps: 10 },
+    { sheet: heroHurtAnimationRight, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10, mirrorX: true },
     { sheet: heroHurtAnimationRight, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10 },
 ]
 
@@ -53,10 +49,19 @@ var getAnimationFrame = function(animationIndex, elapsedMs) {
 
 var drawHeroFrame = function(animationIndex, frameIndex, x, y, width, height) {
     let animation = heroAnimations[animationIndex];
+    let drawY = y + (animationIndex === 6 || animationIndex === 7 ? 10 : 0);
     if (animation.frames) {
         let frame = animation.frames[frameIndex];
-        if (frame.complete && frame.naturalWidth > 0) {
-            context.drawImage(frame, x, y, width, height);
+        if (frame && frame.complete && frame.naturalWidth > 0) {
+            if (animation.mirrorX) {
+                context.save();
+                context.translate(x + width, drawY);
+                context.scale(-1, 1);
+                context.drawImage(frame, 0, 0, width, height);
+                context.restore();
+            } else {
+                context.drawImage(frame, x, drawY, width, height);
+            }
         }
         return;
     }
@@ -64,8 +69,17 @@ var drawHeroFrame = function(animationIndex, frameIndex, x, y, width, height) {
     if (animation.reverseFrameOrder) {
         frameIndex = animation.frameCount - frameIndex - 1;
     }
-    context.drawImage(animation.sheet, frameIndex * animation.frameWidth, 0,
-        animation.frameWidth, animation.frameHeight, x, y, width, height);
+    if (animation.mirrorX) {
+        context.save();
+        context.translate(x + width, y);
+        context.scale(-1, 1);
+        context.drawImage(animation.sheet, frameIndex * animation.frameWidth, 0,
+            animation.frameWidth, animation.frameHeight, 0, 0, width, height);
+        context.restore();
+    } else {
+        context.drawImage(animation.sheet, frameIndex * animation.frameWidth, 0,
+            animation.frameWidth, animation.frameHeight, x, y, width, height);
+    }
 }
 
 let heroAnimationIndex = 1;
@@ -443,21 +457,12 @@ var gameLoop = function(interval) {
     /* S */
     if (pressedKeys["83"]) {
         if (heroDirection) {
-            heroAnimationIndex = 9;
-        } else {
-            heroAnimationIndex = 8;
-        }
-    }
-
-    /* K */
-    if (pressedKeys["75"]) {
-        if (heroDirection) {
-            if (currentFrame == 4 && previousHeroAnimationIndex == 7) {
+            if (currentFrame == 7 && previousHeroAnimationIndex == 7) {
                 attackCompleted = true;
             }
             if (attackCompleted && pressedKeys["68"]) {
                 heroAnimationIndex = 3;
-            }  else if (attackCompleted && 
+            } else if (attackCompleted &&
                 !(pressedKeys[65] || pressedKeys[68])) {
                 heroAnimationIndex = 1;
             } else {
@@ -465,12 +470,12 @@ var gameLoop = function(interval) {
             }
         }
         else {
-            if (currentFrame == 0 && previousHeroAnimationIndex == 6) {
+            if (currentFrame == 7 && previousHeroAnimationIndex == 6) {
                 attackCompleted = true;
             }
-            if (attackCompleted && pressedKeys["65"]) {    
+            if (attackCompleted && pressedKeys["65"]) {
                 heroAnimationIndex = 2;
-            } else if (attackCompleted && 
+            } else if (attackCompleted &&
                 !(pressedKeys[65] || pressedKeys[68])) {
                 heroAnimationIndex = 0;
             } else {

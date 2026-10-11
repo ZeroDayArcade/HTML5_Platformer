@@ -9,20 +9,22 @@
     "james": {
       "idle_left": {
         "fps": 3,
+        "mirrorX": true,
         "frames": [
-          "james/idle_left/000.png",
-          "james/idle_left/001.png"
+          "james/idle_right/000.png",
+          "james/idle_right/001.png"
         ]
       },
       "run_left": {
         "fps": 9,
+        "mirrorX": true,
         "frames": [
-          "james/run_left/000.png",
-          "james/run_left/001.png",
-          "james/run_left/002.png",
-          "james/run_left/003.png",
-          "james/run_left/004.png",
-          "james/run_left/005.png"
+          "james/run_right/000.png",
+          "james/run_right/001.png",
+          "james/run_right/002.png",
+          "james/run_right/003.png",
+          "james/run_right/004.png",
+          "james/run_right/005.png"
         ]
       },
       "idle_right": {
@@ -47,20 +49,22 @@
     "sonia": {
       "idle_left": {
         "fps": 3,
+        "mirrorX": true,
         "frames": [
-          "sonia/idle_left/000.png",
-          "sonia/idle_left/001.png"
+          "sonia/idle_right/000.png",
+          "sonia/idle_right/001.png"
         ]
       },
       "run_left": {
         "fps": 9,
+        "mirrorX": true,
         "frames": [
-          "sonia/run_left/000.png",
-          "sonia/run_left/001.png",
-          "sonia/run_left/002.png",
-          "sonia/run_left/003.png",
-          "sonia/run_left/004.png",
-          "sonia/run_left/005.png"
+          "sonia/run_right/000.png",
+          "sonia/run_right/001.png",
+          "sonia/run_right/002.png",
+          "sonia/run_right/003.png",
+          "sonia/run_right/004.png",
+          "sonia/run_right/005.png"
         ]
       },
       "idle_right": {
@@ -96,15 +100,43 @@
       },
       "jump_left": {
         "fps": 10,
+        "mirrorX": true,
         "frames": [
-          "sonia/jump_left/000.png",
-          "sonia/jump_left/001.png",
-          "sonia/jump_left/002.png",
-          "sonia/jump_left/003.png",
-          "sonia/jump_left/004.png",
-          "sonia/jump_left/005.png",
-          "sonia/jump_left/006.png",
-          "sonia/jump_left/007.png"
+          "sonia/jump_right/000.png",
+          "sonia/jump_right/001.png",
+          "sonia/jump_right/002.png",
+          "sonia/jump_right/003.png",
+          "sonia/jump_right/004.png",
+          "sonia/jump_right/005.png",
+          "sonia/jump_right/006.png",
+          "sonia/jump_right/007.png"
+        ]
+      },
+      "attack_right": {
+        "fps": 10,
+        "frames": [
+          "sonia/attack_right/000.png",
+          "sonia/attack_right/001.png",
+          "sonia/attack_right/002.png",
+          "sonia/attack_right/003.png",
+          "sonia/attack_right/004.png",
+          "sonia/attack_right/005.png",
+          "sonia/attack_right/006.png",
+          "sonia/attack_right/007.png"
+        ]
+      },
+      "attack_left": {
+        "fps": 10,
+        "mirrorX": true,
+        "frames": [
+          "sonia/attack_right/000.png",
+          "sonia/attack_right/001.png",
+          "sonia/attack_right/002.png",
+          "sonia/attack_right/003.png",
+          "sonia/attack_right/004.png",
+          "sonia/attack_right/005.png",
+          "sonia/attack_right/006.png",
+          "sonia/attack_right/007.png"
         ]
       }
     }
