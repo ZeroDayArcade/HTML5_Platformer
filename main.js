@@ -28,6 +28,26 @@ var getFrameImages = function(prefix, frameCount) {
     });
 }
 
+const jamesIdleRightFrames = getFrameImages("james-idle-right", 2);
+
+const HERO_DIRECTION = Object.freeze({
+    LEFT: "left",
+    RIGHT: "right",
+});
+
+const HERO_ANIMATION = Object.freeze({
+    IDLE_LEFT: 0,
+    IDLE_RIGHT: 1,
+    RUN_LEFT: 2,
+    RUN_RIGHT: 3,
+    JUMP_LEFT: 4,
+    JUMP_RIGHT: 5,
+    ATTACK_LEFT: 6,
+    ATTACK_RIGHT: 7,
+    HURT_LEFT: 8,
+    HURT_RIGHT: 9,
+});
+
 let heroAnimations = [
     { frames: getFrameImages("hero-idle-right", 2), fps: 3, mirrorX: true },
     { frames: getFrameImages("hero-idle-right", 2), fps: 3 },
@@ -45,6 +65,85 @@ var getAnimationFrame = function(animationIndex, elapsedMs) {
     let animation = heroAnimations[animationIndex];
     let frameCount = animation.frames ? animation.frames.length : animation.frameCount;
     return Math.floor(elapsedMs * animation.fps / 1000) % frameCount;
+}
+
+var getJamesLevelEndPosition = function(level) {
+    const jamesWidth = 128;
+    const jamesHeight = 96;
+    const endMargin = TILE_SIZE * 4;
+    const levelWidth = level[0].length * TILE_SIZE;
+    const jamesLevelX = Math.max(0, levelWidth - endMargin - jamesWidth);
+    const centerTile = Math.min(
+        level[0].length - 1,
+        Math.floor((jamesLevelX + jamesWidth / 2) / TILE_SIZE)
+    );
+    let floorRow = -1;
+    for (let row = level.length - 1; row >= 0; row--) {
+        if (level[row][centerTile] !== 0) {
+            floorRow = row;
+            break;
+        }
+    }
+    if (floorRow < 0) {
+        throw new Error("James preview has no floor in level " + currentLevelIndex);
+    }
+    return {
+        x: jamesLevelX,
+        y: floorRow * TILE_SIZE - jamesHeight,
+        width: jamesWidth,
+        height: jamesHeight,
+    };
+}
+
+var drawJamesFrame = function(frame, x, y, width) {
+    if (!frame || !frame.complete || frame.naturalWidth === 0) {
+        return;
+    }
+    context.save();
+    context.translate(x + width, y);
+    context.scale(-1, 1);
+    context.drawImage(frame, 0, 0);
+    context.restore();
+}
+
+var drawJamesLevelEndPreview = function(position, elapsedMs) {
+    const screenX = position.x - scrollX;
+    if (screenX + position.width < 0 || screenX > SCREEN_WIDTH) {
+        return;
+    }
+    const frameIndex = Math.floor(elapsedMs * 3 / 1000) % 2;
+    const frame = jamesIdleRightFrames[frameIndex];
+    drawJamesFrame(frame, screenX, position.y, position.width);
+}
+
+var drawHugHeart = function(x, y, elapsedMs) {
+    context.save();
+    const pulse = 1 + 0.12 * Math.sin(elapsedMs / 110);
+    context.translate(x, y);
+    context.scale(pulse, pulse);
+    context.fillStyle = "#f06b86";
+    context.beginPath();
+    context.moveTo(0, 5);
+    context.bezierCurveTo(-13, -3, -8, -13, 0, -6);
+    context.bezierCurveTo(8, -13, 13, -3, 0, 5);
+    context.fill();
+    context.restore();
+}
+
+var drawReunionAnimation = function(centerX, y, elapsedMs) {
+    const frameIndex = Math.floor(elapsedMs * 3 / 1000) % 2;
+    const soniaX = centerX - (HERO_WIDTH + HERO_JAMES_REUNION_DISTANCE) / 2;
+    const jamesX = soniaX + HERO_JAMES_REUNION_DISTANCE;
+    drawJamesFrame(jamesIdleRightFrames[frameIndex], jamesX, y, HERO_WIDTH);
+    drawHeroFrame(
+        HERO_ANIMATION.IDLE_RIGHT,
+        frameIndex,
+        soniaX,
+        y,
+        HERO_WIDTH,
+        HERO_HEIGHT
+    );
+    drawHugHeart(centerX, y - 8, elapsedMs);
 }
 
 var drawHeroFrame = function(animationIndex, frameIndex, x, y, width, height) {
@@ -81,8 +180,8 @@ var drawHeroFrame = function(animationIndex, frameIndex, x, y, width, height) {
     }
 }
 
-let heroAnimationIndex = 1;
-let heroDirection = 1;
+let heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
+let heroDirection = HERO_DIRECTION.RIGHT;
 let heroJumping = false;
 let heroPeakJumping = false;
 let jumpPressedLastFrame = false;
@@ -93,7 +192,7 @@ let jumpPhaseStartedAt = 0;
 var scrollX = 0;
 
 var resetAnimationTime = Date.now();
-var previousHeroAnimationIndex = 1;
+var previousHeroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
 let currentLevel = [];
 
 let points = 0;
@@ -102,6 +201,7 @@ let gameStarted = false;
 let gameOver = false;
 
 let demoComplete = false;
+let jamesHug = null;
 
 var levels = window.gameLevels || [];
 let currentLevelIndex = 0;
@@ -123,6 +223,7 @@ const TILE_SIZE = 32;
 const HERO_WIDTH = 128;
 const HERO_HEIGHT = 96;
 const HERO_HITBOX_WIDTH = 50;
+const HERO_JAMES_REUNION_DISTANCE = 72;
 let distanceFromFloor = 0;
 let nearestFloorHeight = -HERO_HEIGHT;
 let newJumpPress = false;
@@ -249,8 +350,8 @@ var resetGame = function() {
     scrollX = 0;
     points = 0;
     hoverjump = false;
-    heroAnimationIndex = 1;
-    heroDirection = 1;
+    heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
+    heroDirection = HERO_DIRECTION.RIGHT;
     heroJumping = false;
     heroPeakJumping = false;
     jumpPressedLastFrame = false;
@@ -259,12 +360,26 @@ var resetGame = function() {
     hoverjump = false;
     scrollX = 0;
     resetAnimationTime = Date.now();
-    previousHeroAnimationIndex = 1;
+    previousHeroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
     points = 0;
     distanceFromFloor = 0;
     nearestFloorHeight = -HERO_HEIGHT;
     newJumpPress = false;
     attackCompleted = false;
+    jamesHug = null;
+}
+
+var finishLevelAfterHug = function() {
+    if (currentLevelIndex < levels.length - 1) {
+        const score = points;
+        currentLevelIndex++;
+        resetGame();
+        points = score;
+    } else {
+        jamesHug = null;
+        demoComplete = true;
+        gameStarted = false;
+    }
 }
 
 /* Title / Menu Screen */
@@ -281,9 +396,7 @@ var titleScreenLoop = function(now, oldTime) {
     context.fillStyle = "rgb(255, 247, 227, " + 
         (0.75+0.15*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
     context.fillText("Press Enter", 240, 260);
-    let currentFrame = getAnimationFrame(heroAnimationIndex, Date.now());
-    drawHeroFrame(heroAnimationIndex, currentFrame, SCREEN_WIDTH/2-100, 280,
-        200, 150);
+    drawReunionAnimation(SCREEN_WIDTH / 2, 300, now);
     if (pressedKeys["13"] || (enterPressedInitially && !beyondTitleScreen)) {
         gameStarted = true;
         beyondTitleScreen = true;
@@ -324,8 +437,7 @@ var demoCompleteScreen = function(now, oldTime) {
     context.fillStyle = "rgb(255, 247, 227, " + 
         (0.50+0.10*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
     context.fillText("Press ESC to Exit", 200, 290);
-    let currentFrame = getAnimationFrame(3, Date.now());
-    drawHeroFrame(3, currentFrame, SCREEN_WIDTH/2-100, 280, 200, 150);
+    drawReunionAnimation(SCREEN_WIDTH / 2, 340, now);
     if (pressedKeys["27"]) {
         resetGame();
         demoComplete = false;
@@ -337,6 +449,20 @@ var gameLoop = function(interval) {
 
     /* Clear Screen */
 	context.clearRect(0, 0, canvas.width, canvas.height);
+
+    const animationTime = Date.now();
+    const jamesPosition = getJamesLevelEndPosition(currentLevel);
+    if (jamesHug) {
+        const elapsed = animationTime - jamesHug.startedAt;
+        const progress = Math.min(1, elapsed / 350);
+        const easedProgress = progress * progress * (3 - 2 * progress);
+        hero.levelX = jamesHug.startX +
+            (jamesHug.targetX - jamesHug.startX) * easedProgress;
+        hero.levelY = jamesPosition.y;
+        hero.velocityY = 0;
+        heroDirection = HERO_DIRECTION.RIGHT;
+        heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
+    }
 
     /* Update scroll position */
     if (hero.levelX + hero.spriteWidth/2 >= SCREEN_WIDTH/2 && 
@@ -366,8 +492,26 @@ var gameLoop = function(interval) {
 
     drawLevelTiles(currentLevel, currentLevel[0].length, currentLevel.length, scrollX);
 
+    drawJamesLevelEndPreview(jamesPosition, animationTime - resetAnimationTime);
+    if (jamesHug) {
+        hero.renderX = hero.levelX - scrollX;
+        hero.renderY = hero.levelY;
+        const elapsed = animationTime - jamesHug.startedAt;
+        const hugFrame = getAnimationFrame(HERO_ANIMATION.IDLE_RIGHT, elapsed);
+        drawHeroFrame(HERO_ANIMATION.IDLE_RIGHT, hugFrame, hero.renderX, hero.renderY,
+            hero.spriteWidth, hero.spriteHeight);
+        drawHugHeart(
+            (hero.renderX + jamesPosition.x - scrollX + jamesPosition.width) / 2,
+            jamesPosition.y - 4,
+            elapsed
+        );
+        if (elapsed >= 3000) {
+            finishLevelAfterHug();
+        }
+        return;
+    }
+
     /* Draw Hero */
-    const animationTime = Date.now();
     if (jumpAnimationPhase === "flight" && hero.velocityY > 0) {
         jumpAnimationPhase = "falling";
         jumpPhaseStartedAt = animationTime;
@@ -379,7 +523,9 @@ var gameLoop = function(interval) {
         jumpPhaseStartedAt = animationTime;
     }
     if (jumpAnimationPhase !== "normal") {
-        heroAnimationIndex = heroDirection ? 5 : 4;
+        heroAnimationIndex = heroDirection === HERO_DIRECTION.RIGHT
+            ? HERO_ANIMATION.JUMP_RIGHT
+            : HERO_ANIMATION.JUMP_LEFT;
     }
     let animation = heroAnimations[heroAnimationIndex];
     let currentFrame = getAnimationFrame(heroAnimationIndex,
@@ -401,8 +547,11 @@ var gameLoop = function(interval) {
         if (currentFrame >= frameCount) {
             jumpAnimationPhase = "normal";
             jumpPhaseStartedAt = 0;
-            heroAnimationIndex = pressedKeys["65"] ? 2 :
-                pressedKeys["68"] ? 3 : heroDirection ? 1 : 0;
+            heroAnimationIndex = pressedKeys["65"] ? HERO_ANIMATION.RUN_LEFT :
+                pressedKeys["68"] ? HERO_ANIMATION.RUN_RIGHT :
+                    heroDirection === HERO_DIRECTION.RIGHT
+                        ? HERO_ANIMATION.IDLE_RIGHT
+                        : HERO_ANIMATION.IDLE_LEFT;
             animation = heroAnimations[heroAnimationIndex];
             frameCount = animation.frames ? animation.frames.length : animation.frameCount;
             currentFrame = getAnimationFrame(
@@ -411,12 +560,14 @@ var gameLoop = function(interval) {
         }
     }
     if (jumpAnimationPhase === "normal" &&
-        (heroAnimationIndex==4 || heroAnimationIndex==5) && heroJumping &&
+        (heroAnimationIndex === HERO_ANIMATION.JUMP_LEFT ||
+            heroAnimationIndex === HERO_ANIMATION.JUMP_RIGHT) && heroJumping &&
         currentFrame == frameCount - 1) {
         heroPeakJumping = true;
     }
     if (jumpAnimationPhase === "normal" &&
-        (heroAnimationIndex==4 || heroAnimationIndex==5) && heroPeakJumping) {
+        (heroAnimationIndex === HERO_ANIMATION.JUMP_LEFT ||
+            heroAnimationIndex === HERO_ANIMATION.JUMP_RIGHT) && heroPeakJumping) {
         currentFrame = frameCount - 1;
     }
     drawHeroFrame(heroAnimationIndex, currentFrame, hero.renderX, hero.renderY,
@@ -434,8 +585,8 @@ var gameLoop = function(interval) {
         if (hero.levelX > -(hero.spriteWidth-HERO_HITBOX_WIDTH)/2 && !collisions.left) {
             hero.levelX -= 240*interval;
         }
-        heroAnimationIndex = 2;
-        heroDirection = 0;
+        heroAnimationIndex = HERO_ANIMATION.RUN_LEFT;
+        heroDirection = HERO_DIRECTION.LEFT;
     }
 
     /* D */
@@ -444,41 +595,46 @@ var gameLoop = function(interval) {
             currentLevel[0].length*TILE_SIZE && !collisions.right) {
             hero.levelX += 240*interval;
         }
-        heroAnimationIndex = 3;
-        heroDirection = 1;
+        heroAnimationIndex = HERO_ANIMATION.RUN_RIGHT;
+        heroDirection = HERO_DIRECTION.RIGHT;
     }
 
     if (!(pressedKeys[65] || pressedKeys[68])) {
-        if (heroDirection) heroAnimationIndex = 1;
-        else heroAnimationIndex = 0;
+        if (heroDirection === HERO_DIRECTION.RIGHT) {
+            heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
+        } else {
+            heroAnimationIndex = HERO_ANIMATION.IDLE_LEFT;
+        }
     }
 
     /* S */
     if (pressedKeys["83"]) {
-        if (heroDirection) {
-            if (currentFrame == 7 && previousHeroAnimationIndex == 7) {
+        if (heroDirection === HERO_DIRECTION.RIGHT) {
+            if (currentFrame === 7 &&
+                previousHeroAnimationIndex === HERO_ANIMATION.ATTACK_RIGHT) {
                 attackCompleted = true;
             }
             if (attackCompleted && pressedKeys["68"]) {
-                heroAnimationIndex = 3;
+                heroAnimationIndex = HERO_ANIMATION.RUN_RIGHT;
             } else if (attackCompleted &&
                 !(pressedKeys[65] || pressedKeys[68])) {
-                heroAnimationIndex = 1;
+                heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
             } else {
-                heroAnimationIndex = 7;
+                heroAnimationIndex = HERO_ANIMATION.ATTACK_RIGHT;
             }
         }
         else {
-            if (currentFrame == 7 && previousHeroAnimationIndex == 6) {
+            if (currentFrame === 7 &&
+                previousHeroAnimationIndex === HERO_ANIMATION.ATTACK_LEFT) {
                 attackCompleted = true;
             }
             if (attackCompleted && pressedKeys["65"]) {
-                heroAnimationIndex = 2;
+                heroAnimationIndex = HERO_ANIMATION.RUN_LEFT;
             } else if (attackCompleted &&
                 !(pressedKeys[65] || pressedKeys[68])) {
-                heroAnimationIndex = 0;
+                heroAnimationIndex = HERO_ANIMATION.IDLE_LEFT;
             } else {
-                heroAnimationIndex = 6;
+                heroAnimationIndex = HERO_ANIMATION.ATTACK_LEFT;
             }
         }
     } else {
@@ -488,8 +644,11 @@ var gameLoop = function(interval) {
     /* W */
     if (pressedKeys["87"]) {
         if (distanceFromFloor > 0 || hoverjump) {
-            if (heroDirection) heroAnimationIndex = 5;
-            else heroAnimationIndex = 4;
+            if (heroDirection === HERO_DIRECTION.RIGHT) {
+                heroAnimationIndex = HERO_ANIMATION.JUMP_RIGHT;
+            } else {
+                heroAnimationIndex = HERO_ANIMATION.JUMP_LEFT;
+            }
             if (jumpAnimationPhase === "normal") {
                 jumpAnimationPhase = "flight";
                 jumpPhaseStartedAt = animationTime;
@@ -502,7 +661,7 @@ var gameLoop = function(interval) {
     }
     
 
-    if (previousHeroAnimationIndex != heroAnimationIndex) {
+    if (previousHeroAnimationIndex !== heroAnimationIndex) {
         resetAnimationTime = Date.now();
     }
 
@@ -541,7 +700,9 @@ var gameLoop = function(interval) {
         if (newJumpPress) {
             hero.levelY -= 1;
             hero.velocityY = -10;
-            heroAnimationIndex = heroDirection ? 5 : 4;
+            heroAnimationIndex = heroDirection === HERO_DIRECTION.RIGHT
+                ? HERO_ANIMATION.JUMP_RIGHT
+                : HERO_ANIMATION.JUMP_LEFT;
             jumpAnimationPhase = "flight";
             jumpPhaseStartedAt = Date.now();
         }
@@ -597,18 +758,16 @@ var gameLoop = function(interval) {
     jumpPressedLastFrame = pressedKeys["87"];
     previousHeroAnimationIndex = heroAnimationIndex;
 
-    if (hero.levelX + hero.spriteWidth/2 >= 
-        TILE_SIZE*currentLevel[0].length) {
-        if (currentLevelIndex < levels.length - 1) {
-            // Keep the run score while resetGame prepares the next level.
-            let score = points;
-            currentLevelIndex++;
-            resetGame();
-            points = score;
-        } else {
-            demoComplete = true;
-            gameStarted = false;
-        }
+    const heroCenterX = hero.levelX + hero.spriteWidth / 2;
+    const jamesCenterX = jamesPosition.x + jamesPosition.width / 2;
+    if (heroCenterX <= jamesCenterX &&
+        jamesCenterX - heroCenterX <= HERO_JAMES_REUNION_DISTANCE &&
+        Math.abs(hero.levelY - jamesPosition.y) <= 5) {
+        jamesHug = {
+            startedAt: animationTime,
+            startX: hero.levelX,
+            targetX: jamesPosition.x - HERO_JAMES_REUNION_DISTANCE,
+        };
     }
 
     if (hero.levelY >= SCREEN_HEIGHT) {
