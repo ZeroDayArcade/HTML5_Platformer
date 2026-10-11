@@ -33,8 +33,8 @@ var getFrameImages = function(prefix, frameCount) {
 }
 
 let heroAnimations = [
-    { frames: getFrameImages("hero-idle-left", 4), fps: 3 },
-    { frames: getFrameImages("hero-idle-right", 4), fps: 3 },
+    { frames: getFrameImages("hero-idle-left", 2), fps: 3 },
+    { frames: getFrameImages("hero-idle-right", 2), fps: 3 },
     { frames: getFrameImages("hero-run-left", 6), fps: 10 },
     { frames: getFrameImages("hero-run-right", 6), fps: 10 },
     { sheet: heroJumpAnimationLeft, frameCount: 4, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },

@@ -11,9 +11,7 @@
         "fps": 3,
         "frames": [
           "james/idle_left/000.png",
-          "james/idle_left/001.png",
-          "james/idle_left/002.png",
-          "james/idle_left/003.png"
+          "james/idle_left/001.png"
         ]
       },
       "run_left": {
@@ -31,9 +29,7 @@
         "fps": 3,
         "frames": [
           "james/idle_right/000.png",
-          "james/idle_right/001.png",
-          "james/idle_right/002.png",
-          "james/idle_right/003.png"
+          "james/idle_right/001.png"
         ]
       },
       "run_right": {
@@ -53,9 +49,7 @@
         "fps": 3,
         "frames": [
           "sonia/idle_left/000.png",
-          "sonia/idle_left/001.png",
-          "sonia/idle_left/002.png",
-          "sonia/idle_left/003.png"
+          "sonia/idle_left/001.png"
         ]
       },
       "run_left": {
@@ -73,9 +67,7 @@
         "fps": 3,
         "frames": [
           "sonia/idle_right/000.png",
-          "sonia/idle_right/001.png",
-          "sonia/idle_right/002.png",
-          "sonia/idle_right/003.png"
+          "sonia/idle_right/001.png"
         ]
       },
       "run_right": {

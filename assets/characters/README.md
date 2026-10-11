@@ -1,6 +1,8 @@
 # Characters — independently drawn skeleton-based frames
 
-Each of the 40 frames was rendered separately from a pose skeleton; **no sprite sheet was cropped** and **no previous PNG was reused**.
+Idle animations use frames 000-001 (two PNGs per direction); running animations
+use frames 000-005. Across both characters, the animation metadata references 32
+PNG frames. **No sprite sheet was cropped** and **no previous PNG was reused**.
 
 Size: 128x96 RGBA PNG; all images have genuine transparent backgrounds. Draw full frame without cropping. Foot sole baseline y=92 (last opaque pixel y=92 or y=93 depending nearest-neighbor).
 
