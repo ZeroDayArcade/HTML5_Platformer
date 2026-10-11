@@ -17,8 +17,6 @@ const layers = [
 
 const tiles = document.getElementById("tiles");
 
-const heroJumpAnimationLeft     =    document.getElementById("hero-jump-left");
-const heroJumpAnimationRight    =    document.getElementById("hero-jump-right");
 const heroAttackAnimationLeft   =    document.getElementById("hero-attack-left");
 const heroAttackAnimationRight  =    document.getElementById("hero-attack-right");
 const heroCrouchAnimationLeft   =    document.getElementById("hero-crouch-left");
@@ -37,8 +35,8 @@ let heroAnimations = [
     { frames: getFrameImages("hero-idle-right", 2), fps: 3 },
     { frames: getFrameImages("hero-run-left", 6), fps: 10 },
     { frames: getFrameImages("hero-run-right", 6), fps: 10 },
-    { sheet: heroJumpAnimationLeft, frameCount: 4, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
-    { sheet: heroJumpAnimationRight, frameCount: 4, frameWidth: 100, frameHeight: 59, fps: 10 },
+    { frames: getFrameImages("hero-jump-left", 8), fps: 10 },
+    { frames: getFrameImages("hero-jump-right", 8), fps: 10 },
     { sheet: heroAttackAnimationLeft, frameCount: 5, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
     { sheet: heroAttackAnimationRight, frameCount: 5, frameWidth: 100, frameHeight: 59, fps: 10 },
     { sheet: heroCrouchAnimationLeft, frameCount: 1, frameWidth: 100, frameHeight: 59, fps: 10, reverseFrameOrder: true },
@@ -76,6 +74,8 @@ let heroJumping = false;
 let heroPeakJumping = false;
 let jumpPressedLastFrame = false;
 let hoverjump = false;
+let jumpAnimationPhase = "normal";
+let jumpPhaseStartedAt = 0;
 
 var scrollX = 0;
 
@@ -241,6 +241,8 @@ var resetGame = function() {
     heroJumping = false;
     heroPeakJumping = false;
     jumpPressedLastFrame = false;
+    jumpAnimationPhase = "normal";
+    jumpPhaseStartedAt = 0;
     hoverjump = false;
     scrollX = 0;
     resetAnimationTime = Date.now();
@@ -352,15 +354,56 @@ var gameLoop = function(interval) {
     drawLevelTiles(currentLevel, currentLevel[0].length, currentLevel.length, scrollX);
 
     /* Draw Hero */
+    const animationTime = Date.now();
+    if (jumpAnimationPhase === "flight" && hero.velocityY > 0) {
+        jumpAnimationPhase = "falling";
+        jumpPhaseStartedAt = animationTime;
+    }
+    if ((jumpAnimationPhase === "flight" ||
+            jumpAnimationPhase === "falling") &&
+        distanceFromFloor <= 0 && hero.velocityY >= 0) {
+        jumpAnimationPhase = "landing";
+        jumpPhaseStartedAt = animationTime;
+    }
+    if (jumpAnimationPhase !== "normal") {
+        heroAnimationIndex = heroDirection ? 5 : 4;
+    }
     let animation = heroAnimations[heroAnimationIndex];
     let currentFrame = getAnimationFrame(heroAnimationIndex,
-        Date.now()-resetAnimationTime);
+        animationTime-resetAnimationTime);
     let frameCount = animation.frames ? animation.frames.length : animation.frameCount;
-    if ((heroAnimationIndex==4 || heroAnimationIndex==5) && heroJumping && 
+    if (jumpAnimationPhase === "flight") {
+        currentFrame = Math.min(3, frameCount - 1);
+    } else if (jumpAnimationPhase === "falling") {
+        currentFrame = 4 + Math.min(
+            1,
+            Math.floor(
+                (animationTime - jumpPhaseStartedAt) * animation.fps / 1000
+            )
+        );
+    } else if (jumpAnimationPhase === "landing") {
+        currentFrame = 6 + Math.floor(
+            (animationTime - jumpPhaseStartedAt) * animation.fps / 1000
+        );
+        if (currentFrame >= frameCount) {
+            jumpAnimationPhase = "normal";
+            jumpPhaseStartedAt = 0;
+            heroAnimationIndex = pressedKeys["65"] ? 2 :
+                pressedKeys["68"] ? 3 : heroDirection ? 1 : 0;
+            animation = heroAnimations[heroAnimationIndex];
+            frameCount = animation.frames ? animation.frames.length : animation.frameCount;
+            currentFrame = getAnimationFrame(
+                heroAnimationIndex, animationTime - resetAnimationTime
+            );
+        }
+    }
+    if (jumpAnimationPhase === "normal" &&
+        (heroAnimationIndex==4 || heroAnimationIndex==5) && heroJumping &&
         currentFrame == frameCount - 1) {
         heroPeakJumping = true;
     }
-    if ((heroAnimationIndex==4 || heroAnimationIndex==5) && heroPeakJumping) {
+    if (jumpAnimationPhase === "normal" &&
+        (heroAnimationIndex==4 || heroAnimationIndex==5) && heroPeakJumping) {
         currentFrame = frameCount - 1;
     }
     drawHeroFrame(heroAnimationIndex, currentFrame, hero.renderX, hero.renderY,
@@ -443,6 +486,10 @@ var gameLoop = function(interval) {
         if (distanceFromFloor > 0 || hoverjump) {
             if (heroDirection) heroAnimationIndex = 5;
             else heroAnimationIndex = 4;
+            if (jumpAnimationPhase === "normal") {
+                jumpAnimationPhase = "flight";
+                jumpPhaseStartedAt = animationTime;
+            }
         }
         heroJumping = true;
     } else {
@@ -490,6 +537,9 @@ var gameLoop = function(interval) {
         if (newJumpPress) {
             hero.levelY -= 1;
             hero.velocityY = -10;
+            heroAnimationIndex = heroDirection ? 5 : 4;
+            jumpAnimationPhase = "flight";
+            jumpPhaseStartedAt = Date.now();
         }
     }
 
@@ -516,6 +566,11 @@ var gameLoop = function(interval) {
             currentLevel[13][82] = 0;
         }
         hoverjump = true;
+        if (distanceFromFloor > 0 &&
+            jumpAnimationPhase === "normal") {
+            jumpAnimationPhase = "flight";
+            jumpPhaseStartedAt = animationTime;
+        }
     }
 
     /* Golden Cross */

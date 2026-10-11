@@ -80,6 +80,32 @@
           "sonia/run_right/004.png",
           "sonia/run_right/005.png"
         ]
+      },
+      "jump_right": {
+        "fps": 10,
+        "frames": [
+          "sonia/jump_right/000.png",
+          "sonia/jump_right/001.png",
+          "sonia/jump_right/002.png",
+          "sonia/jump_right/003.png",
+          "sonia/jump_right/004.png",
+          "sonia/jump_right/005.png",
+          "sonia/jump_right/006.png",
+          "sonia/jump_right/007.png"
+        ]
+      },
+      "jump_left": {
+        "fps": 10,
+        "frames": [
+          "sonia/jump_left/000.png",
+          "sonia/jump_left/001.png",
+          "sonia/jump_left/002.png",
+          "sonia/jump_left/003.png",
+          "sonia/jump_left/004.png",
+          "sonia/jump_left/005.png",
+          "sonia/jump_left/006.png",
+          "sonia/jump_left/007.png"
+        ]
       }
     }
   }
