@@ -20,3 +20,8 @@ level2Map[11][29] = 1;
 
 window.gameLevels = window.gameLevels || [];
 window.gameLevels.push(level2Map);
+
+window.gameLevelEnemies = window.gameLevelEnemies || [];
+window.gameLevelEnemies[window.gameLevels.length - 1] = [
+    { type: "armored_pig", x: 20 * 32, direction: -1 },
+];

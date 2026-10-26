@@ -28,11 +28,10 @@ This demo contains one small level but illustrates the concepts above. The way i
     <li>A: Run/Move Left</li>
     <li>D: Run/Move Right</li>
     <li>W: Jump / Hold to Hover if Wing Amulet has been collected</li>
-    <li>S: Crouch</li>
-    <li>K: Attack</li>
+    <li>S: Attack</li>
 </ul>
 
-There are two collectable items in the demo: (1) The Wing Amulet and (2) The Golden Cross. The Wing Amulet will let you hover/fly by holding W once you collect it, and the Golden Cross gives you 10,000 points. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
+Level 2 includes an armored pig that patrols using the same movement behavior as the Ribbon Pig and is immune to Sonia's attack. There are two collectable items in the demo: (1) The Wing Amulet and (2) The Golden Cross. The Wing Amulet will let you hover/fly by holding W once you collect it, and the Golden Cross gives you 10,000 points. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
 
 
 # Running Locally
@@ -79,4 +78,3 @@ Tiles: <a href="https://opengameart.org/content/dungeon-crawl-32x32-tiles">openg
 
 Music by Joth (@Joth_Music) <br/>
 <a href="https://opengameart.org/content/cyberpunk-moonlight-sonata">opengameart.org/content/cyberpunk-moonlight-sonata</a>
-

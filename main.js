@@ -33,6 +33,8 @@ const ribbonPigRunRightFrames = getFrameImages("ribbon-pig-run-right", 6);
 const ribbonPigRunLeftFrames = getFrameImages("ribbon-pig-run-left", 6);
 const ribbonPigDieFrames = getFrameImages("ribbon-pig-die", 6);
 const ribbonPigDeathEffectFrames = getFrameImages("ribbon-pig-death-effect", 4);
+const armoredPigRunRightFrames = getFrameImages("armored-pig-run-right", 6);
+const armoredPigRunLeftFrames = getFrameImages("armored-pig-run-left", 6);
 const RIBBON_PIG_ANIMATION_FPS = 9;
 
 const HERO_DIRECTION = Object.freeze({
@@ -230,6 +232,7 @@ const HERO_WIDTH = 128;
 const HERO_HEIGHT = 96;
 const HERO_HITBOX_WIDTH = 50;
 const HERO_JAMES_REUNION_DISTANCE = 72;
+const HERO_JUMP_VELOCITY = -12;
 const RIBBON_PIG_WIDTH = 64;
 const RIBBON_PIG_HEIGHT = 48;
 const RIBBON_PIG_SPEED = 72;
@@ -254,21 +257,29 @@ let levelEnemies = [];
 var resetLevelEnemies = function(levelIndex) {
     const definitions = (window.gameLevelEnemies || [])[levelIndex] || [];
     levelEnemies = definitions.map(function(definition) {
-        if (definition.type !== "ribbon_pig") {
+        if (definition.type !== "ribbon_pig" &&
+            definition.type !== "armored_pig") {
             throw new Error("Unknown level enemy type: " + definition.type);
         }
         const centerColumn = Math.floor(
             (definition.x + RIBBON_PIG_WIDTH / 2) / TILE_SIZE
         );
-        let floorRow = -1;
-        for (let row = currentLevel.length - 1; row >= 0; row--) {
-            if (currentLevel[row][centerColumn] !== 0) {
-                floorRow = row;
-                break;
+        let floorRow = definition.supportRow;
+        if (floorRow === undefined) {
+            floorRow = -1;
+            for (let row = currentLevel.length - 1; row >= 0; row--) {
+                if (currentLevel[row][centerColumn] !== 0) {
+                    floorRow = row;
+                    break;
+                }
             }
+        } else if (!Number.isInteger(floorRow) ||
+            !currentLevel[floorRow] ||
+            currentLevel[floorRow][centerColumn] === 0) {
+            throw new Error("Level enemy spawn has no supporting floor.");
         }
         if (floorRow < 0) {
-            throw new Error("Ribbon pig spawn has no supporting floor.");
+            throw new Error("Level enemy spawn has no supporting floor.");
         }
         return {
             type: definition.type,
@@ -283,10 +294,7 @@ var resetLevelEnemies = function(levelIndex) {
 
 var updateLevelEnemies = function(deltaSeconds, now) {
     levelEnemies.forEach(function(enemy) {
-        if (enemy.type !== "ribbon_pig") {
-            return;
-        }
-        if (enemy.state === "dying") {
+        if (enemy.type === "ribbon_pig" && enemy.state === "dying") {
             if (now - enemy.diedAt >=
                 ribbonPigDieFrames.length * 1000 / RIBBON_PIG_ANIMATION_FPS) {
                 enemy.state = "death_effect";
@@ -341,24 +349,26 @@ var updateLevelEnemies = function(deltaSeconds, now) {
 
 var drawLevelEnemies = function(now) {
     levelEnemies.forEach(function(enemy) {
-        if (enemy.type !== "ribbon_pig") {
-            return;
-        }
-        const frames = enemy.state === "dying"
-            ? ribbonPigDieFrames
-            : enemy.state === "death_effect"
-                ? ribbonPigDeathEffectFrames
-                : enemy.direction > 0
-                    ? ribbonPigRunRightFrames
-                    : ribbonPigRunLeftFrames;
-        const frameIndex = enemy.state === "dying"
+        const isArmoredPig = enemy.type === "armored_pig";
+        const frames = isArmoredPig
+            ? enemy.direction > 0
+                ? armoredPigRunRightFrames
+                : armoredPigRunLeftFrames
+            : enemy.state === "dying"
+                ? ribbonPigDieFrames
+                : enemy.state === "death_effect"
+                    ? ribbonPigDeathEffectFrames
+                    : enemy.direction > 0
+                        ? ribbonPigRunRightFrames
+                        : ribbonPigRunLeftFrames;
+        const frameIndex = !isArmoredPig && enemy.state === "dying"
             ? Math.min(
                 frames.length - 1,
                 Math.floor(
                     (now - enemy.diedAt) * RIBBON_PIG_ANIMATION_FPS / 1000
                 )
             )
-            : enemy.state === "death_effect"
+            : !isArmoredPig && enemy.state === "death_effect"
                 ? Math.min(
                     frames.length - 1,
                     Math.floor(
@@ -371,12 +381,30 @@ var drawLevelEnemies = function(now) {
                 ) % frames.length;
         const frame = frames[frameIndex];
         if (frame && frame.complete && frame.naturalWidth > 0) {
-            context.drawImage(frame, enemy.levelX - scrollX, enemy.levelY);
+            if (isArmoredPig) {
+                const scale = Math.min(
+                    RIBBON_PIG_WIDTH / frame.naturalWidth,
+                    RIBBON_PIG_HEIGHT / frame.naturalHeight
+                );
+                const width = frame.naturalWidth * scale;
+                const height = frame.naturalHeight * scale;
+                context.drawImage(
+                    frame,
+                    enemy.levelX - scrollX + (RIBBON_PIG_WIDTH - width) / 2,
+                    enemy.levelY + RIBBON_PIG_HEIGHT - height,
+                    width,
+                    height
+                );
+            } else {
+                context.drawImage(frame, enemy.levelX - scrollX, enemy.levelY);
+            }
         }
     });
 }
 
 var heroTouchesLevelEnemy = function(enemy) {
+    const isArmoredPig = enemy.type === "armored_pig";
+    const horizontalInset = isArmoredPig ? 3 : 7;
     const heroBox = {
         left: hero.levelX + (hero.spriteWidth - HERO_HITBOX_WIDTH) / 2,
         right: hero.levelX + (hero.spriteWidth + HERO_HITBOX_WIDTH) / 2,
@@ -384,10 +412,10 @@ var heroTouchesLevelEnemy = function(enemy) {
         bottom: hero.levelY + hero.spriteHeight - 8,
     };
     const pigBox = {
-        left: enemy.levelX + 7,
-        right: enemy.levelX + RIBBON_PIG_WIDTH - 7,
-        top: enemy.levelY + 10,
-        bottom: enemy.levelY + RIBBON_PIG_HEIGHT - 6,
+        left: enemy.levelX + horizontalInset,
+        right: enemy.levelX + RIBBON_PIG_WIDTH - horizontalInset,
+        top: enemy.levelY + (isArmoredPig ? 2 : 10),
+        bottom: enemy.levelY + RIBBON_PIG_HEIGHT - (isArmoredPig ? 2 : 6),
     };
     return heroBox.left < pigBox.right &&
         heroBox.right > pigBox.left &&
@@ -400,7 +428,8 @@ var checkLevelEnemyCollisions = function() {
         return false;
     }
     return levelEnemies.some(function(enemy) {
-        return enemy.type === "ribbon_pig" &&
+        return (enemy.type === "ribbon_pig" ||
+            enemy.type === "armored_pig") &&
             enemy.state === "alive" &&
             heroTouchesLevelEnemy(enemy);
     });
@@ -539,6 +568,8 @@ var checkSpriteTileCollision = function(sprite, tileX, tileY, tileIndex, collisi
 var checkSpriteTileCollisions = function(sprite, level) {
     let levelWidth = level[0].length;
     let levelHeight = level.length;
+    const oneWayPlatforms =
+        (window.gameLevelOneWayPlatforms || [])[currentLevelIndex] || [];
     let collisions = {
         left: false,
         right: false,
@@ -549,6 +580,27 @@ var checkSpriteTileCollisions = function(sprite, level) {
     for (let i=0; i<levelWidth; i++) {
         for (let j=0; j<levelHeight; j++) {
             if (level[j][i] != 0) {
+                const platform = oneWayPlatforms.find(function(candidate) {
+                    return candidate.row === j &&
+                        i >= candidate.start &&
+                        i <= candidate.end;
+                });
+                if (platform) {
+                    const tileY = j * TILE_SIZE;
+                    const tileX = i * TILE_SIZE;
+                    const spriteBottom = sprite.levelY + sprite.spriteHeight;
+                    const overlapsHorizontally =
+                        sprite.levelX + sprite.spriteWidth > tileX &&
+                        sprite.levelX < tileX + TILE_SIZE;
+                    if (overlapsHorizontally &&
+                        hero.velocityY >= 0 &&
+                        spriteBottom >= tileY &&
+                        spriteBottom - hero.velocityY <= tileY) {
+                        collisions.top = true;
+                        collisions.topY = tileY;
+                    }
+                    continue;
+                }
                 checkSpriteTileCollision(sprite, i*TILE_SIZE, 
                     j*TILE_SIZE, level[j][i], collisions);
             }
@@ -935,7 +987,7 @@ var gameLoop = function(interval) {
             } else newJumpPress = false;
             if (newJumpPress) {
                 hero.levelY -= 1;
-                hero.velocityY = -10;
+                hero.velocityY = HERO_JUMP_VELOCITY;
                 heroAnimationIndex = heroDirection === HERO_DIRECTION.RIGHT
                     ? HERO_ANIMATION.JUMP_RIGHT
                     : HERO_ANIMATION.JUMP_LEFT;
