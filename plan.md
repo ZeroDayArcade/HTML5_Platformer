@@ -18,18 +18,65 @@
 - `main.js` contains the main loop, movement, physics, collision, rendering, and game-state screens.
 - Level tilemaps live in separate files under `levels/` and register in load order through `window.gameLevels`.
 - There are currently two levels. Reaching the end of the first automatically loads the second; completing the last loaded level shows the completion screen.
-- Level 1 has a continuous bottom floor to make the current test easier.
+- Level 1 now has two bottom-floor pits around a ground patrol area for the
+  ribbon pig enemy.
+- The ribbon pig is level-one-only, patrols left and right, turns around when
+  the ground ahead ends or a solid obstacle blocks its path, and restarts the
+  current level when it touches Sonia. Its animation PNGs are 64x48 RGBA
+  (resized in place from the original 128x96 frames); the game draws them at
+  their native dimensions.
+- Pressing S commits Sonia to the complete attack animation; movement and jump
+  inputs are ignored until it finishes. Attacks can only start while Sonia is
+  grounded. A correctly timed attack hit plays the pig's death animation
+  followed by its death effect without moving the pig, then removes it from
+  collision and patrol.
+- The game-over screen uses the existing hurt animation and labels Escape as
+  the restart control.
 - The movement, collision, and rendering systems have not yet been redesigned. Collectible locations and behavior are still partly hard-coded in `main.js`.
 
-## Story outline (tentative)
+## Three-level progression (latest proposal; details to confirm)
 
-These names and themes are placeholders and can change:
+The latest design proposal focuses the playable story on three increasingly
+challenging platforming levels. It replaces the earlier tentative five-part
+story outline below as the current narrative direction, but whether the whole
+game should now be exactly three levels (rather than the previously confirmed
+4–5 short levels) remains an open scope decision.
 
-1. **The Beginning** — meeting and getting to know each other; tutorial.
-2. **Little Things** — everyday life, small switches, and simple mechanisms.
-3. **Our Adventures** — travel memories, moving platforms, and harder jumps.
-4. **Memory Puzzle** — a small puzzle using clues from earlier levels.
-5. **The Next Adventure** — a gentler, warm finale.
+1. **Learn the moves** — A familiar, classic side-scrolling platforming
+   introduction. Give the player safe opportunities to learn movement, jumping,
+   and attacking before combining those actions. The first enemy is a
+   particularly fierce pig creature. Teach its threat and attack timing before
+   asking the player to handle multiple hazards at once.
+2. **Find another way** — Introduce armored enemies that cannot be defeated by
+   ordinary attacks. The player must find and use a special item to make them
+   fall asleep, then proceed past them. The item's identity, acquisition point,
+   and whether its effect is temporary or persistent are not decided yet.
+   Reinforce that attacking is not the solution to every obstacle.
+3. **The way to space** — Reuse the armored-enemy/item lesson with harder
+   platforming and more demanding encounters. James is not waiting at the
+   expected destination. A hidden wing item lets the player fly much higher,
+   reach space, and finally meet James there. The wing's location, discovery
+   hint, flight controls, and whether this is the required ending or a hidden
+   route are still to be designed.
+
+The phrase "最後中點沒有 James" in the proposal is interpreted here as James
+not being at the expected final destination; confirm if it instead means a
+specific midpoint. These beats are a design proposal, not implemented game
+behavior.
+
+### Open decisions
+
+- Confirm whether the game is now three levels total or retains the earlier
+  4–5-level target, with these three as the main progression.
+- Decide how the wing is hinted at and whether the space meeting is required or
+  an optional hidden ending.
+- Define the sleep item's appearance, effect duration, and how it is taught.
+- Decide whether the pig and armored enemies recur in later levels or are
+  level-specific.
+
+The previous story concepts (everyday-life switches, travel memories, and a
+memory puzzle) remain optional material and are not part of the latest
+three-level proposal unless brought back deliberately.
 
 ## Puzzle direction under consideration
 

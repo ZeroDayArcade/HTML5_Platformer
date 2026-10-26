@@ -29,6 +29,11 @@ var getFrameImages = function(prefix, frameCount) {
 }
 
 const jamesIdleRightFrames = getFrameImages("james-idle-right", 2);
+const ribbonPigRunRightFrames = getFrameImages("ribbon-pig-run-right", 6);
+const ribbonPigRunLeftFrames = getFrameImages("ribbon-pig-run-left", 6);
+const ribbonPigDieFrames = getFrameImages("ribbon-pig-die", 6);
+const ribbonPigDeathEffectFrames = getFrameImages("ribbon-pig-death-effect", 4);
+const RIBBON_PIG_ANIMATION_FPS = 9;
 
 const HERO_DIRECTION = Object.freeze({
     LEFT: "left",
@@ -215,6 +220,7 @@ var loadLevel = function(levelIndex) {
         throw new Error("Level " + levelIndex + " does not exist.");
     }
     currentLevel = JSON.parse(JSON.stringify(levels[levelIndex]));
+    resetLevelEnemies(levelIndex);
 }
 
 const SCREEN_WIDTH = 816;
@@ -224,10 +230,14 @@ const HERO_WIDTH = 128;
 const HERO_HEIGHT = 96;
 const HERO_HITBOX_WIDTH = 50;
 const HERO_JAMES_REUNION_DISTANCE = 72;
+const RIBBON_PIG_WIDTH = 64;
+const RIBBON_PIG_HEIGHT = 48;
+const RIBBON_PIG_SPEED = 72;
 let distanceFromFloor = 0;
 let nearestFloorHeight = -HERO_HEIGHT;
 let newJumpPress = false;
-let attackCompleted = false;
+let attackState = null;
+let attackKeyWasDown = false;
 
 let hero = {
     spriteWidth: HERO_WIDTH,
@@ -237,6 +247,218 @@ let hero = {
     renderX: 100,
     renderY: SCREEN_HEIGHT-TILE_SIZE-HERO_HEIGHT,
     velocityY: 0,
+}
+
+let levelEnemies = [];
+
+var resetLevelEnemies = function(levelIndex) {
+    const definitions = (window.gameLevelEnemies || [])[levelIndex] || [];
+    levelEnemies = definitions.map(function(definition) {
+        if (definition.type !== "ribbon_pig") {
+            throw new Error("Unknown level enemy type: " + definition.type);
+        }
+        const centerColumn = Math.floor(
+            (definition.x + RIBBON_PIG_WIDTH / 2) / TILE_SIZE
+        );
+        let floorRow = -1;
+        for (let row = currentLevel.length - 1; row >= 0; row--) {
+            if (currentLevel[row][centerColumn] !== 0) {
+                floorRow = row;
+                break;
+            }
+        }
+        if (floorRow < 0) {
+            throw new Error("Ribbon pig spawn has no supporting floor.");
+        }
+        return {
+            type: definition.type,
+            levelX: definition.x,
+            levelY: floorRow * TILE_SIZE - RIBBON_PIG_HEIGHT,
+            direction: definition.direction < 0 ? -1 : 1,
+            startedAt: Date.now(),
+            state: "alive",
+        };
+    });
+}
+
+var updateLevelEnemies = function(deltaSeconds, now) {
+    levelEnemies.forEach(function(enemy) {
+        if (enemy.type !== "ribbon_pig") {
+            return;
+        }
+        if (enemy.state === "dying") {
+            if (now - enemy.diedAt >=
+                ribbonPigDieFrames.length * 1000 / RIBBON_PIG_ANIMATION_FPS) {
+                enemy.state = "death_effect";
+                enemy.deathEffectStartedAt = enemy.diedAt +
+                    ribbonPigDieFrames.length * 1000 / RIBBON_PIG_ANIMATION_FPS;
+            }
+            if (enemy.state === "dying") {
+                return;
+            }
+        }
+        if (enemy.state === "death_effect") {
+            return;
+        }
+        const feetRow = Math.floor((enemy.levelY + RIBBON_PIG_HEIGHT) / TILE_SIZE);
+        const nextX = enemy.levelX +
+            enemy.direction * RIBBON_PIG_SPEED * deltaSeconds;
+        const leadingEdgeX = nextX +
+            (enemy.direction > 0 ? RIBBON_PIG_WIDTH : 0);
+        const supportProbeX = nextX +
+            (enemy.direction > 0 ? RIBBON_PIG_WIDTH - 8 : 8);
+        const supportColumn = Math.floor(supportProbeX / TILE_SIZE);
+        const hasGroundAhead = currentLevel[feetRow] &&
+            currentLevel[feetRow][supportColumn] !== 0;
+        const obstacleColumn = Math.floor(
+            (leadingEdgeX - (enemy.direction < 0 ? 1 : 0)) / TILE_SIZE
+        );
+        const firstBodyRow = Math.floor(
+            (enemy.levelY + 16) / TILE_SIZE
+        );
+        const lastBodyRow = Math.floor(
+            (enemy.levelY + RIBBON_PIG_HEIGHT - 8) / TILE_SIZE
+        );
+        let obstacleAhead = false;
+        for (let row = firstBodyRow; row <= lastBodyRow; row++) {
+            if (currentLevel[row] && currentLevel[row][obstacleColumn] !== 0) {
+                obstacleAhead = true;
+                break;
+            }
+        }
+        if (!hasGroundAhead || obstacleAhead) {
+            enemy.direction *= -1;
+            return;
+        }
+        enemy.levelX = nextX;
+    });
+    levelEnemies = levelEnemies.filter(function(enemy) {
+        return enemy.state !== "death_effect" ||
+            now - enemy.deathEffectStartedAt <
+                ribbonPigDeathEffectFrames.length * 1000 / RIBBON_PIG_ANIMATION_FPS;
+    });
+}
+
+var drawLevelEnemies = function(now) {
+    levelEnemies.forEach(function(enemy) {
+        if (enemy.type !== "ribbon_pig") {
+            return;
+        }
+        const frames = enemy.state === "dying"
+            ? ribbonPigDieFrames
+            : enemy.state === "death_effect"
+                ? ribbonPigDeathEffectFrames
+                : enemy.direction > 0
+                    ? ribbonPigRunRightFrames
+                    : ribbonPigRunLeftFrames;
+        const frameIndex = enemy.state === "dying"
+            ? Math.min(
+                frames.length - 1,
+                Math.floor(
+                    (now - enemy.diedAt) * RIBBON_PIG_ANIMATION_FPS / 1000
+                )
+            )
+            : enemy.state === "death_effect"
+                ? Math.min(
+                    frames.length - 1,
+                    Math.floor(
+                        (now - enemy.deathEffectStartedAt) *
+                            RIBBON_PIG_ANIMATION_FPS / 1000
+                    )
+                )
+                : Math.floor(
+                    (now - enemy.startedAt) * RIBBON_PIG_ANIMATION_FPS / 1000
+                ) % frames.length;
+        const frame = frames[frameIndex];
+        if (frame && frame.complete && frame.naturalWidth > 0) {
+            context.drawImage(frame, enemy.levelX - scrollX, enemy.levelY);
+        }
+    });
+}
+
+var heroTouchesLevelEnemy = function(enemy) {
+    const heroBox = {
+        left: hero.levelX + (hero.spriteWidth - HERO_HITBOX_WIDTH) / 2,
+        right: hero.levelX + (hero.spriteWidth + HERO_HITBOX_WIDTH) / 2,
+        top: hero.levelY + 18,
+        bottom: hero.levelY + hero.spriteHeight - 8,
+    };
+    const pigBox = {
+        left: enemy.levelX + 7,
+        right: enemy.levelX + RIBBON_PIG_WIDTH - 7,
+        top: enemy.levelY + 10,
+        bottom: enemy.levelY + RIBBON_PIG_HEIGHT - 6,
+    };
+    return heroBox.left < pigBox.right &&
+        heroBox.right > pigBox.left &&
+        heroBox.top < pigBox.bottom &&
+        heroBox.bottom > pigBox.top;
+}
+
+var checkLevelEnemyCollisions = function() {
+    if (attackState) {
+        return false;
+    }
+    return levelEnemies.some(function(enemy) {
+        return enemy.type === "ribbon_pig" &&
+            enemy.state === "alive" &&
+            heroTouchesLevelEnemy(enemy);
+    });
+}
+
+var startHeroAttack = function(now) {
+    const isGrounded = distanceFromFloor <= 0 &&
+        hero.velocityY === 0 &&
+        jumpAnimationPhase === "normal";
+    if (!isGrounded || attackState || !pressedKeys["83"] || attackKeyWasDown) {
+        return;
+    }
+    attackState = {
+        direction: heroDirection,
+        startedAt: now,
+        hitEnemies: new Set(),
+    };
+    resetAnimationTime = now;
+}
+
+var tryHitLevelEnemies = function(frameIndex, now) {
+    if (!attackState || frameIndex < 3 || frameIndex > 6) {
+        return;
+    }
+    const heroCenterX = hero.levelX + hero.spriteWidth / 2;
+    const attackReach = 84;
+    const attackBox = {
+        left: attackState.direction === HERO_DIRECTION.RIGHT
+            ? heroCenterX
+            : heroCenterX - attackReach,
+        right: attackState.direction === HERO_DIRECTION.RIGHT
+            ? heroCenterX + attackReach
+            : heroCenterX,
+        top: hero.levelY + 24,
+        bottom: hero.levelY + 78,
+    };
+    levelEnemies.forEach(function(enemy) {
+        if (enemy.type !== "ribbon_pig" ||
+            enemy.state !== "alive" ||
+            attackState.hitEnemies.has(enemy)) {
+            return;
+        }
+        const pigBox = {
+            left: enemy.levelX + 7,
+            right: enemy.levelX + RIBBON_PIG_WIDTH - 7,
+            top: enemy.levelY + 10,
+            bottom: enemy.levelY + RIBBON_PIG_HEIGHT - 6,
+        };
+        const intersects = attackBox.left < pigBox.right &&
+            attackBox.right > pigBox.left &&
+            attackBox.top < pigBox.bottom &&
+            attackBox.bottom > pigBox.top;
+        if (intersects) {
+            enemy.state = "dying";
+            enemy.diedAt = now;
+            attackState.hitEnemies.add(enemy);
+        }
+    });
 }
 
 /* Load Game Music */
@@ -365,7 +587,8 @@ var resetGame = function() {
     distanceFromFloor = 0;
     nearestFloorHeight = -HERO_HEIGHT;
     newJumpPress = false;
-    attackCompleted = false;
+    attackState = null;
+    attackKeyWasDown = Boolean(pressedKeys["83"]);
     jamesHug = null;
 }
 
@@ -413,12 +636,20 @@ var gameOverScreen = function(now, oldTime) {
     context.font = "60px Luminari, fantasy";
     context.fillStyle = "rgb(255, 247, 227, " + 
         (0.50+0.10*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
-    context.fillText("Press ESC to Exit", 170, 260);
-    let currentFrame = getAnimationFrame(11, Date.now());
-    drawHeroFrame(11, currentFrame, SCREEN_WIDTH/2-100, 280, 200, 150);
+    context.fillText("Press ESC to Restart", 170, 260);
+    let currentFrame = getAnimationFrame(HERO_ANIMATION.HURT_RIGHT, Date.now());
+    drawHeroFrame(
+        HERO_ANIMATION.HURT_RIGHT,
+        currentFrame,
+        SCREEN_WIDTH / 2 - 100,
+        280,
+        200,
+        150
+    );
     if (pressedKeys["27"]) {
         resetGame();
         gameOver = false;
+        gameStarted = true;
     }
 }
 
@@ -451,6 +682,20 @@ var gameLoop = function(interval) {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
     const animationTime = Date.now();
+    startHeroAttack(animationTime);
+    attackKeyWasDown = Boolean(pressedKeys["83"]);
+    if (attackState &&
+        animationTime - attackState.startedAt >=
+            heroAnimations[attackState.direction === HERO_DIRECTION.RIGHT
+                ? HERO_ANIMATION.ATTACK_RIGHT
+                : HERO_ANIMATION.ATTACK_LEFT].frames.length * 1000 /
+                heroAnimations[HERO_ANIMATION.ATTACK_RIGHT].fps) {
+        attackState = null;
+        heroAnimationIndex = heroDirection === HERO_DIRECTION.RIGHT
+            ? HERO_ANIMATION.IDLE_RIGHT
+            : HERO_ANIMATION.IDLE_LEFT;
+        resetAnimationTime = animationTime;
+    }
     const jamesPosition = getJamesLevelEndPosition(currentLevel);
     if (jamesHug) {
         const elapsed = animationTime - jamesHug.startedAt;
@@ -491,6 +736,7 @@ var gameLoop = function(interval) {
     }
 
     drawLevelTiles(currentLevel, currentLevel[0].length, currentLevel.length, scrollX);
+    updateLevelEnemies(interval, animationTime);
 
     drawJamesLevelEndPreview(jamesPosition, animationTime - resetAnimationTime);
     if (jamesHug) {
@@ -522,25 +768,34 @@ var gameLoop = function(interval) {
         jumpAnimationPhase = "landing";
         jumpPhaseStartedAt = animationTime;
     }
-    if (jumpAnimationPhase !== "normal") {
+    if (!attackState && jumpAnimationPhase !== "normal") {
         heroAnimationIndex = heroDirection === HERO_DIRECTION.RIGHT
             ? HERO_ANIMATION.JUMP_RIGHT
             : HERO_ANIMATION.JUMP_LEFT;
     }
+    if (attackState) {
+        heroAnimationIndex = attackState.direction === HERO_DIRECTION.RIGHT
+            ? HERO_ANIMATION.ATTACK_RIGHT
+            : HERO_ANIMATION.ATTACK_LEFT;
+    }
     let animation = heroAnimations[heroAnimationIndex];
-    let currentFrame = getAnimationFrame(heroAnimationIndex,
-        animationTime-resetAnimationTime);
+    let currentFrame = attackState
+        ? Math.min(
+            animation.frames.length - 1,
+            Math.floor((animationTime - attackState.startedAt) * animation.fps / 1000)
+        )
+        : getAnimationFrame(heroAnimationIndex, animationTime-resetAnimationTime);
     let frameCount = animation.frames ? animation.frames.length : animation.frameCount;
-    if (jumpAnimationPhase === "flight") {
+    if (!attackState && jumpAnimationPhase === "flight") {
         currentFrame = Math.min(3, frameCount - 1);
-    } else if (jumpAnimationPhase === "falling") {
+    } else if (!attackState && jumpAnimationPhase === "falling") {
         currentFrame = 4 + Math.min(
             1,
             Math.floor(
                 (animationTime - jumpPhaseStartedAt) * animation.fps / 1000
             )
         );
-    } else if (jumpAnimationPhase === "landing") {
+    } else if (!attackState && jumpAnimationPhase === "landing") {
         currentFrame = 6 + Math.floor(
             (animationTime - jumpPhaseStartedAt) * animation.fps / 1000
         );
@@ -559,17 +814,19 @@ var gameLoop = function(interval) {
             );
         }
     }
-    if (jumpAnimationPhase === "normal" &&
+    if (!attackState && jumpAnimationPhase === "normal" &&
         (heroAnimationIndex === HERO_ANIMATION.JUMP_LEFT ||
             heroAnimationIndex === HERO_ANIMATION.JUMP_RIGHT) && heroJumping &&
         currentFrame == frameCount - 1) {
         heroPeakJumping = true;
     }
-    if (jumpAnimationPhase === "normal" &&
+    if (!attackState && jumpAnimationPhase === "normal" &&
         (heroAnimationIndex === HERO_ANIMATION.JUMP_LEFT ||
             heroAnimationIndex === HERO_ANIMATION.JUMP_RIGHT) && heroPeakJumping) {
         currentFrame = frameCount - 1;
     }
+    tryHitLevelEnemies(currentFrame, animationTime);
+    drawLevelEnemies(animationTime);
     drawHeroFrame(heroAnimationIndex, currentFrame, hero.renderX, hero.renderY,
         hero.spriteWidth, hero.spriteHeight);
 
@@ -580,6 +837,14 @@ var gameLoop = function(interval) {
         spriteHeight: hero.spriteHeight
     }, currentLevel);
 
+    if (attackState) {
+        heroAnimationIndex = attackState.direction === HERO_DIRECTION.RIGHT
+            ? HERO_ANIMATION.ATTACK_RIGHT
+            : HERO_ANIMATION.ATTACK_LEFT;
+        heroJumping = false;
+        heroPeakJumping = false;
+        newJumpPress = false;
+    } else {
     /* A */
     if (pressedKeys["65"]) {
         if (hero.levelX > -(hero.spriteWidth-HERO_HITBOX_WIDTH)/2 && !collisions.left) {
@@ -607,40 +872,6 @@ var gameLoop = function(interval) {
         }
     }
 
-    /* S */
-    if (pressedKeys["83"]) {
-        if (heroDirection === HERO_DIRECTION.RIGHT) {
-            if (currentFrame === 7 &&
-                previousHeroAnimationIndex === HERO_ANIMATION.ATTACK_RIGHT) {
-                attackCompleted = true;
-            }
-            if (attackCompleted && pressedKeys["68"]) {
-                heroAnimationIndex = HERO_ANIMATION.RUN_RIGHT;
-            } else if (attackCompleted &&
-                !(pressedKeys[65] || pressedKeys[68])) {
-                heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
-            } else {
-                heroAnimationIndex = HERO_ANIMATION.ATTACK_RIGHT;
-            }
-        }
-        else {
-            if (currentFrame === 7 &&
-                previousHeroAnimationIndex === HERO_ANIMATION.ATTACK_LEFT) {
-                attackCompleted = true;
-            }
-            if (attackCompleted && pressedKeys["65"]) {
-                heroAnimationIndex = HERO_ANIMATION.RUN_LEFT;
-            } else if (attackCompleted &&
-                !(pressedKeys[65] || pressedKeys[68])) {
-                heroAnimationIndex = HERO_ANIMATION.IDLE_LEFT;
-            } else {
-                heroAnimationIndex = HERO_ANIMATION.ATTACK_LEFT;
-            }
-        }
-    } else {
-        attackCompleted = false;
-    }
-
     /* W */
     if (pressedKeys["87"]) {
         if (distanceFromFloor > 0 || hoverjump) {
@@ -659,6 +890,7 @@ var gameLoop = function(interval) {
         heroJumping = false;
         heroPeakJumping = false;
     }
+    }
     
 
     if (previousHeroAnimationIndex !== heroAnimationIndex) {
@@ -670,50 +902,61 @@ var gameLoop = function(interval) {
         nearestFloorHeight = SCREEN_HEIGHT-collisions.topY;
     } else nearestFloorHeight = -hero.spriteHeight;
 
-    distanceFromFloor = SCREEN_HEIGHT - 
+    distanceFromFloor = SCREEN_HEIGHT -
         nearestFloorHeight - (hero.levelY + hero.spriteHeight);
-    if (distanceFromFloor > 0 && !(hoverjump && heroJumping)) {
-        hero.velocityY += 0.5;      /* Gravity */
-    } else {
+    if (attackState) {
         hero.velocityY = 0;
-    }
-    if (distanceFromFloor <= 0) {
-        hero.levelY = SCREEN_HEIGHT - nearestFloorHeight - 
-            hero.spriteHeight;
+        heroJumping = false;
+        newJumpPress = false;
+    } else {
+        if (distanceFromFloor > 0 && !(hoverjump && heroJumping)) {
+            hero.velocityY += 0.5;      /* Gravity */
+        } else {
+            hero.velocityY = 0;
+        }
+        if (distanceFromFloor <= 0) {
+            hero.levelY = SCREEN_HEIGHT - nearestFloorHeight -
+                hero.spriteHeight;
+        }
+
+        /* Hover Jump */
+        if (hoverjump) {
+            if (heroJumping && !newJumpPress) {
+                newJumpPress = true;
+            } else newJumpPress = false;
+            if (newJumpPress) {
+                hero.velocityY = -4;
+            }
+        } else {
+            /* Traditional Jump */
+            if (heroJumping && !newJumpPress &&
+                distanceFromFloor <= 0 && !jumpPressedLastFrame) {
+                newJumpPress = true;
+            } else newJumpPress = false;
+            if (newJumpPress) {
+                hero.levelY -= 1;
+                hero.velocityY = -10;
+                heroAnimationIndex = heroDirection === HERO_DIRECTION.RIGHT
+                    ? HERO_ANIMATION.JUMP_RIGHT
+                    : HERO_ANIMATION.JUMP_LEFT;
+                jumpAnimationPhase = "flight";
+                jumpPhaseStartedAt = Date.now();
+            }
+        }
+
+        if ((hero.velocityY > 0 && collisions.top) ||
+            (hero.velocityY < 0 && hero.levelY <= -10) ||
+            (hero.velocityY < 0 && collisions.bottom)) {
+            hero.velocityY = 0;
+        }
+        hero.levelY += hero.velocityY;
     }
 
-    /* Hover Jump */
-    if (hoverjump) {
-        if (heroJumping && !newJumpPress) {
-            newJumpPress = true;
-        } else newJumpPress = false;
-        if (newJumpPress) {
-            // hero.levelY -= 1;
-            hero.velocityY = -4;
-        }
-    } else {
-        /* Traditional Jump */
-        if (heroJumping && !newJumpPress && 
-            distanceFromFloor <= 0 && !jumpPressedLastFrame) {
-            newJumpPress = true;
-        } else newJumpPress = false;
-        if (newJumpPress) {
-            hero.levelY -= 1;
-            hero.velocityY = -10;
-            heroAnimationIndex = heroDirection === HERO_DIRECTION.RIGHT
-                ? HERO_ANIMATION.JUMP_RIGHT
-                : HERO_ANIMATION.JUMP_LEFT;
-            jumpAnimationPhase = "flight";
-            jumpPhaseStartedAt = Date.now();
-        }
+    if (checkLevelEnemyCollisions()) {
+        gameOver = true;
+        gameStarted = false;
+        return;
     }
-
-    if ((hero.velocityY > 0 && collisions.top) || 
-        (hero.velocityY < 0 && hero.levelY <= -10) ||
-        (hero.velocityY < 0 && collisions.bottom)) {
-        hero.velocityY = 0;
-    }
-    hero.levelY += hero.velocityY;
 
     /* Wings */
     let touchedWings = {top: false, topY:null, 

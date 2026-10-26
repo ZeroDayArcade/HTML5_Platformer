@@ -18,3 +18,14 @@ window.gameLevels.push(
         [ 1,1,1,1,1,1,1,1,4,5,6,1,1,1,1,1,1,1,1,1,1,3,2,1,1,1,1,1,1,1,3,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,8,1,1,1,1,8,1,1,1,1,1,1,1,1,2,3,4,5,4,3,2,1,1,1,1,1,1,1,1,5,1,1,1,1,6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     ]
 );
+
+// Leave a ground stretch between two pits for the ribbon pig to patrol.
+var level1Map = window.gameLevels[window.gameLevels.length - 1];
+[52, 53, 54, 68, 69, 70].forEach(function(column) {
+    level1Map[14][column] = 0;
+});
+
+window.gameLevelEnemies = window.gameLevelEnemies || [];
+window.gameLevelEnemies[window.gameLevels.length - 1] = [
+    { type: "ribbon_pig", x: 60 * 32, direction: -1 }
+];
