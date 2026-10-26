@@ -217,6 +217,16 @@ if (levels.length === 0) {
     throw new Error("No levels loaded. Check the level script tags in index.html.");
 }
 
+const levelBackgrounds = levels.map(function(_, levelIndex) {
+    const background = new Image();
+    const source = "assets/backgrounds/level" + (levelIndex + 1) + ".png";
+    background.onerror = function() {
+        console.error("Failed to load level background: " + source);
+    };
+    background.src = source;
+    return background;
+});
+
 var loadLevel = function(levelIndex) {
     if (!levels[levelIndex]) {
         throw new Error("Level " + levelIndex + " does not exist.");
@@ -771,19 +781,41 @@ var gameLoop = function(interval) {
     hero.renderX = hero.levelX - scrollX;
     hero.renderY = hero.levelY;
 
-    /* Draw Parallax Layers */
-    for (var i=0; i<layers.length; i++) {
-        if (i==0) {
-            context.drawImage(layers[i], 0, 0, 816, 480);
-        } else {
-            var sx=0.0050*scrollX*Math.pow(2, i);
-            if (i==1) sx-=0;
-            else if (i==4) sx-=Math.floor(sx/263)*263;
-            else sx-=Math.floor(sx/272)*272;
-            var sy=0;
-            var swidth=272;
-            var sheight=160;
-            context.drawImage(layers[i], sx, sy, swidth, sheight, 0, 0, 816, 480);
+    const levelBackground = levelBackgrounds[currentLevelIndex];
+    if (levelBackground &&
+        levelBackground.complete &&
+        levelBackground.naturalWidth > 0) {
+        const scale = Math.max(
+            SCREEN_WIDTH / levelBackground.naturalWidth,
+            SCREEN_HEIGHT / levelBackground.naturalHeight
+        );
+        const width = levelBackground.naturalWidth * scale;
+        const height = levelBackground.naturalHeight * scale;
+        context.drawImage(
+            levelBackground,
+            (SCREEN_WIDTH - width) / 2,
+            (SCREEN_HEIGHT - height) / 2,
+            width,
+            height
+        );
+    } else {
+        /* Draw parallax until this level's background image is ready. */
+        for (var i=0; i<layers.length; i++) {
+            if (i==0) {
+                context.drawImage(layers[i], 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            } else {
+                var sx=0.0050*scrollX*Math.pow(2, i);
+                if (i==1) sx-=0;
+                else if (i==4) sx-=Math.floor(sx/263)*263;
+                else sx-=Math.floor(sx/272)*272;
+                var sy=0;
+                var swidth=272;
+                var sheight=160;
+                context.drawImage(
+                    layers[i], sx, sy, swidth, sheight,
+                    0, 0, SCREEN_WIDTH, SCREEN_HEIGHT
+                );
+            }
         }
     }
 

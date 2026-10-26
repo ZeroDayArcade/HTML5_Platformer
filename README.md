@@ -20,6 +20,8 @@ It could use a bit of performance optimization and variable consolidation, but p
 
 This demo contains one small level but illustrates the concepts above. The way it is written makes it easy to add and edit levels using 2D level arrays.
 
+Level backgrounds are loaded by level order from `assets/backgrounds/levelN.png` (for example, Level 1 uses `level1.png`).
+
 # <a href="https://zerodayarcade.com/demos/platformer">Live Demo</a>
 
 
