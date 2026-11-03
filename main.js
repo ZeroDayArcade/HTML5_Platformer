@@ -74,25 +74,24 @@ var getAnimationFrame = function(animationIndex, elapsedMs) {
     return Math.floor(elapsedMs * animation.fps / 1000) % frameCount;
 }
 
-var getJamesLevelEndPosition = function(level) {
+var getJamesLevelEndPosition = function(level, levelConfig) {
     const jamesWidth = 128;
     const jamesHeight = 96;
-    const endMargin = TILE_SIZE * 4;
-    const levelWidth = level[0].length * TILE_SIZE;
-    const jamesLevelX = Math.max(0, levelWidth - endMargin - jamesWidth);
+    const jamesTileX = levelConfig.jamesPosition.tileX;
+    if (!Number.isInteger(jamesTileX) || jamesTileX < 0 ||
+        (jamesTileX + jamesWidth / TILE_SIZE) > levelConfig.size.width) {
+        throw new Error("James position is outside level " + currentLevelIndex);
+    }
+    const jamesLevelX = jamesTileX * TILE_SIZE;
     const centerTile = Math.min(
-        level[0].length - 1,
+        levelConfig.size.width - 1,
         Math.floor((jamesLevelX + jamesWidth / 2) / TILE_SIZE)
     );
-    let floorRow = -1;
-    for (let row = level.length - 1; row >= 0; row--) {
-        if (level[row][centerTile] !== 0) {
-            floorRow = row;
-            break;
-        }
-    }
-    if (floorRow < 0) {
-        throw new Error("James preview has no floor in level " + currentLevelIndex);
+    const floorRow = levelConfig.jamesPosition.supportRow;
+    if (!Number.isInteger(floorRow) ||
+        !level[floorRow] ||
+        level[floorRow][centerTile] === 0) {
+        throw new Error("James has no supporting floor in level " + currentLevelIndex);
     }
     return {
         x: jamesLevelX,
@@ -211,7 +210,9 @@ let demoComplete = false;
 let jamesHug = null;
 
 var levels = window.gameLevels || [];
+var levelConfigs = window.gameLevelConfigs || [];
 let currentLevelIndex = 0;
+let currentLevelConfig = null;
 
 if (levels.length === 0) {
     throw new Error("No levels loaded. Check the level script tags in index.html.");
@@ -228,10 +229,24 @@ const levelBackgrounds = levels.map(function(_, levelIndex) {
 });
 
 var loadLevel = function(levelIndex) {
-    if (!levels[levelIndex]) {
+    const level = levels[levelIndex];
+    const levelConfig = levelConfigs[levelIndex];
+    if (!level) {
         throw new Error("Level " + levelIndex + " does not exist.");
     }
-    currentLevel = JSON.parse(JSON.stringify(levels[levelIndex]));
+    if (!levelConfig || !levelConfig.size || !levelConfig.jamesPosition) {
+        throw new Error("Level " + levelIndex + " is missing its configuration.");
+    }
+    const { width, height } = levelConfig.size;
+    if (!Number.isInteger(width) || width < 1 ||
+        !Number.isInteger(height) || height < 1 ||
+        level.length !== height ||
+        level.some(function(row) { return row.length !== width; })) {
+        throw new Error("Level " + levelIndex + " map dimensions do not match its configuration.");
+    }
+    currentLevel = JSON.parse(JSON.stringify(level));
+    currentLevelConfig = levelConfig;
+    getJamesLevelEndPosition(currentLevel, currentLevelConfig);
     resetLevelEnemies(levelIndex);
 }
 
@@ -758,7 +773,7 @@ var gameLoop = function(interval) {
             : HERO_ANIMATION.IDLE_LEFT;
         resetAnimationTime = animationTime;
     }
-    const jamesPosition = getJamesLevelEndPosition(currentLevel);
+    const jamesPosition = getJamesLevelEndPosition(currentLevel, currentLevelConfig);
     if (jamesHug) {
         const elapsed = animationTime - jamesHug.startedAt;
         const progress = Math.min(1, elapsed / 350);
@@ -773,9 +788,9 @@ var gameLoop = function(interval) {
 
     /* Update scroll position */
     if (hero.levelX + hero.spriteWidth/2 >= SCREEN_WIDTH/2 && 
-        scrollX+SCREEN_WIDTH < currentLevel[0].length*TILE_SIZE ||
+        scrollX+SCREEN_WIDTH < currentLevelConfig.size.width*TILE_SIZE ||
         (hero.levelX + SCREEN_WIDTH/2 + hero.spriteWidth/2 <= 
-        currentLevel[0].length*TILE_SIZE && scrollX > 0)) {
+        currentLevelConfig.size.width*TILE_SIZE && scrollX > 0)) {
         scrollX = hero.levelX - SCREEN_WIDTH/2 + hero.spriteWidth/2;
     }
     hero.renderX = hero.levelX - scrollX;
@@ -819,7 +834,12 @@ var gameLoop = function(interval) {
         }
     }
 
-    drawLevelTiles(currentLevel, currentLevel[0].length, currentLevel.length, scrollX);
+    drawLevelTiles(
+        currentLevel,
+        currentLevelConfig.size.width,
+        currentLevelConfig.size.height,
+        scrollX
+    );
     updateLevelEnemies(interval, animationTime);
 
     drawJamesLevelEndPreview(jamesPosition, animationTime - resetAnimationTime);
@@ -941,7 +961,7 @@ var gameLoop = function(interval) {
     /* D */
     if (pressedKeys["68"]) {
         if (hero.levelX + (hero.spriteWidth+HERO_HITBOX_WIDTH)/2 - 30 <
-            currentLevel[0].length*TILE_SIZE && !collisions.right) {
+            currentLevelConfig.size.width*TILE_SIZE && !collisions.right) {
             hero.levelX += 240*interval;
         }
         heroAnimationIndex = HERO_ANIMATION.RUN_RIGHT;

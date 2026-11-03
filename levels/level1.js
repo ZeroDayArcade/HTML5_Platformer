@@ -1,6 +1,5 @@
 window.gameLevels = window.gameLevels || [];
-window.gameLevels.push(
-    [
+var level1Map = [
         [ 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0 ], // row 00
         [ 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0 ], // row 01
         [ 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0 ], // row 02
@@ -16,8 +15,20 @@ window.gameLevels.push(
         [ 1,2,1,0,0,0,0,0, 0,0,0,0,1,1,1,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0 ], // row 12
         [ 1,3,1,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0 ], // row 13
         [ 1,1,1,1,1,1,1,1, 4,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,1,1,1, 8,1,1,1,1,8,1,1, 1 ], // row 14
-    ]
-);
+    ];
+window.gameLevels.push(level1Map);
+
+window.gameLevelConfigs = window.gameLevelConfigs || [];
+window.gameLevelConfigs[window.gameLevels.length - 1] = {
+    size: {
+        width: level1Map[0].length,
+        height: level1Map.length,
+    },
+    jamesPosition: {
+        tileX: 49,
+        supportRow: 14,
+    },
+};
 
 var level1Platforms = [
     { row: 13, start: 9, end: 9 },
@@ -32,9 +43,6 @@ var level1Platforms = [
 
 window.gameLevelOneWayPlatforms = window.gameLevelOneWayPlatforms || [];
 window.gameLevelOneWayPlatforms[window.gameLevels.length - 1] = level1Platforms;
-
-window.gameLevelJamesEndMarginTiles = window.gameLevelJamesEndMarginTiles || [];
-window.gameLevelJamesEndMarginTiles[window.gameLevels.length - 1] = 11;
 
 window.gameLevelEnemies = window.gameLevelEnemies || [];
 window.gameLevelEnemies[window.gameLevels.length - 1] = [

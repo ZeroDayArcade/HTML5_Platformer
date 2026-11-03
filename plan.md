@@ -16,7 +16,7 @@
 
 - The project is a plain HTML/CSS/JavaScript game with assets loaded locally from `index.html`.
 - `main.js` contains the main loop, movement, physics, collision, rendering, and game-state screens.
-- Level tilemaps live in separate files under `levels/` and register in load order through `window.gameLevels`.
+- Level tilemaps live in separate files under `levels/` and register in load order through `window.gameLevels`. Each level file also declares its map dimensions and James's reunion position; `main.js` validates and uses that level-specific configuration.
 - There are currently two levels. Reaching the end of the first automatically loads the second; completing the last loaded level shows the completion screen.
 - Level 1 now has two bottom-floor pits around a ground patrol area for the
   ribbon pig enemy.
