@@ -17,7 +17,21 @@ const layers = [
     document.getElementById("parallax-mountain-foreground-trees")
 ];
 
-const tiles = document.getElementById("tiles");
+const tileImages = new Map();
+
+var getTileImage = function(tileNumber) {
+    let image = tileImages.get(tileNumber);
+    if (!image) {
+        const source = "assets/props/" + tileNumber + ".png";
+        image = new Image();
+        image.onerror = function() {
+            console.error("Failed to load tile image: " + source);
+        };
+        image.src = source;
+        tileImages.set(tileNumber, image);
+    }
+    return image;
+}
 
 const heroAttackAnimationRight  =    Array.from({ length: 8 }, function(_, index) {
     return document.getElementById("hero-attack-right-" + String(index).padStart(2, "0"));
@@ -41,9 +55,9 @@ const armoredPigDieFrames = getFrameImages("armored-pig-die", 6);
 const RIBBON_PIG_ANIMATION_FPS = 9;
 const sleepPowderImage = new Image();
 sleepPowderImage.onerror = function() {
-    console.error("Failed to load sleep powder image: assets/props/piggy_sleepy.png");
+    console.error("Failed to load sleep powder image: assets/props/10.png");
 };
-sleepPowderImage.src = "assets/props/piggy_sleepy.png";
+sleepPowderImage.src = "assets/props/10.png";
 
 const HERO_DIRECTION = Object.freeze({
     LEFT: "left",

@@ -51,28 +51,20 @@ var getJamesLevelEndPosition = function(level, tilePosition) {
 }
 
 
-/* Draw Single Level Tile, 32x32 pixels */
-var drawTile = function(x, y, tileIndex) {
-    var sx = (tileIndex*32) - (64*Math.floor(tileIndex/64)*32);
-    var sy = Math.floor(tileIndex/64)*32;
-    context.drawImage(tiles, sx, sy, 32, 32, x, y, 32, 32);
+/* Draw a tile using the image named by its map value. */
+var drawTile = function(x, y, tileNumber) {
+    const image = getTileImage(tileNumber);
+    if (image.complete && image.naturalWidth > 0) {
+        context.drawImage(image, x, y, TILE_SIZE, TILE_SIZE);
+    }
 }
 
 /* Render Level Tiles */
 var drawLevelTiles = function(level, hTiles, vTiles, scrollX) {
     for (var i=0; i<hTiles; i++) {
         for (var j=0; j<vTiles; j++) {
-            if (level[j][i] == 1) {
-                drawTile(32*i-scrollX, j*32, 18+64*3);
-            }
-            else if (level[j][i] == 10) {
-                drawTile(32*i-scrollX, j*32, 49+64*9);
-            }
-            else if (level[j][i] == 12) {
-                drawTile(32*i-scrollX, j*32, 23+64*1);
-            }
-            else if (level[j][i] != 0) {
-                drawTile(32*i-scrollX, j*32, (41+level[j][i])+64*6);
+            if (level[j][i] > 0) {
+                drawTile(TILE_SIZE*i-scrollX, j*TILE_SIZE, level[j][i]);
             }
         }
     }
