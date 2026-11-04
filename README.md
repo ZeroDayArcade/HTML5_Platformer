@@ -26,7 +26,7 @@ Level map values use numbered tile images: `0` is empty, and a positive value `N
 
 ## Code layout
 
-`index.html` loads classic scripts in dependency order: level data, `game/assets.js`, `game/level.js`, `game/enemies.js`, `game/rendering.js`, then `main.js`. The game helpers are grouped by responsibility, while `main.js` owns shared game state, screens, and the main loop. Classic scripts preserve support for opening `index.html` directly from disk.
+`index.html` loads classic scripts in dependency order: level data, `game/assets.js`, `game/level.js`, `game/enemies.js`, `game/rendering.js`, `game/opening.js`, then `main.js`. The opening menu has its own module, while `main.js` owns shared game state, game-over/completion screens, and the main loop. Classic scripts preserve support for opening `index.html` directly from disk.
 
 # <a href="https://zerodayarcade.com/demos/platformer">Live Demo</a>
 

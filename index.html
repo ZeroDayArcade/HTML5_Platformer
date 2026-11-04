@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html>
-    <link rel="stylesheet" href="main.css"></link>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="main.css">
+    </head>
     <body>
-        <img src="assets/background.png" id="title-screen">
+        <img src="assets/backgrounds/begining.png" id="title-screen">
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-bg.png" id="parallax-mountain-bg">
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-montain-far.png" id="parallax-mountain-montain-far">
         <img src="assets/parallax_mountain_pack/layers/parallax-mountain-mountains.png" id="parallax-mountain-mountains">
@@ -81,12 +84,13 @@
         <audio id="theAudio">
             <source src="assets/moonlight.mp3" type="audio/mp3">
         </audio>
+        <script src="levels/level1.js"></script>
+        <script src="levels/level2.js"></script>
+        <script src="game/assets.js"></script>
+        <script src="game/level.js"></script>
+        <script src="game/enemies.js"></script>
+        <script src="game/rendering.js"></script>
+        <script charset="UTF-8" src="game/opening.js"></script>
+        <script src="main.js"></script>
     </body>
-    <script src="levels/level1.js"></script>
-    <script src="levels/level2.js"></script>
-    <script src="game/assets.js"></script>
-    <script src="game/level.js"></script>
-    <script src="game/enemies.js"></script>
-    <script src="game/rendering.js"></script>
-    <script src="main.js"></script>
 </html>

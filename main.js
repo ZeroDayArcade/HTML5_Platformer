@@ -119,14 +119,6 @@ var audioPlaying = false;
 
 /* For Safari Audio Compatibility */
 var enterPressedInitially = false;
-var beyondTitleScreen = false;
-onInitialEnterPress = function(e) {
-    if (e.key == "Enter") {
-        enterPressedInitially = true;
-        audioElement.play();
-    }
-}
-document.addEventListener('keypress', onInitialEnterPress);
 
 /* Reset Game and Level */
 var resetGame = function() {
@@ -173,27 +165,6 @@ var finishLevelAfterHug = function() {
         jamesHug = null;
         demoComplete = true;
         gameStarted = false;
-    }
-}
-
-/* Title / Menu Screen */
-var titleScreenLoop = function(now, oldTime) {
-    var sx=0;
-    var sy=0;
-    var swidth=384;
-    var sheight=224;
-    context.drawImage(titleScreen, sx, sy, swidth, sheight, 0, 0, 816, 480);
-    context.font = "90px Luminari, fantasy";
-    context.fillStyle = "rgb(242,131,28)";
-    context.fillText("Platform Pillage", 75, 140);
-    context.font = "60px Luminari, fantasy";
-    context.fillStyle = "rgb(255, 247, 227, " + 
-        (0.75+0.15*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
-    context.fillText("Press Enter", 240, 260);
-    drawReunionAnimation(SCREEN_WIDTH / 2, 300, now);
-    if (pressedKeys["13"] || (enterPressedInitially && !beyondTitleScreen)) {
-        gameStarted = true;
-        beyondTitleScreen = true;
     }
 }
 
