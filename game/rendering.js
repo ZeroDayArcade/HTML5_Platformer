@@ -44,13 +44,14 @@ var drawLevelBackground = function(background, backgroundScrollX) {
     }
 }
 
-var drawJamesFrame = function(frame, x, y, width) {
+var drawJamesFrame = function(frame, x, y, width, scale) {
     if (!frame || !frame.complete || frame.naturalWidth === 0) {
         return;
     }
+    scale = scale || 1;
     context.save();
     context.translate(x + width, y);
-    context.scale(-1, 1);
+    context.scale(-scale, scale);
     context.drawImage(frame, 0, 0);
     context.restore();
 }
@@ -79,19 +80,32 @@ var drawHugHeart = function(x, y, elapsedMs) {
     context.restore();
 }
 
-var drawReunionAnimation = function(centerX, y, elapsedMs) {
+var drawReunionAnimation = function(centerX, y, elapsedMs, scale) {
+    scale = scale || 1;
     const frameIndex = Math.floor(elapsedMs * 3 / 1000) % 2;
-    const soniaX = centerX - (HERO_WIDTH + HERO_JAMES_REUNION_DISTANCE) / 2;
-    const jamesX = soniaX + HERO_JAMES_REUNION_DISTANCE;
-    drawJamesFrame(jamesIdleRightFrames[frameIndex], jamesX, y, HERO_WIDTH);
+    const characterWidth = HERO_WIDTH * scale;
+    const reunionDistance = HERO_JAMES_REUNION_DISTANCE * scale;
+    const soniaX = centerX - (characterWidth + reunionDistance) / 2;
+    const jamesX = soniaX + reunionDistance;
+    drawJamesFrame(
+        jamesIdleRightFrames[frameIndex],
+        jamesX,
+        y,
+        characterWidth,
+        scale
+    );
+    context.save();
+    context.translate(soniaX, y);
+    context.scale(scale, scale);
     drawHeroFrame(
         HERO_ANIMATION.IDLE_RIGHT,
         frameIndex,
-        soniaX,
-        y,
+        0,
+        0,
         HERO_WIDTH,
         HERO_HEIGHT
     );
+    context.restore();
     drawHugHeart(centerX, y - 8, elapsedMs);
 }
 

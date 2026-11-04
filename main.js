@@ -15,8 +15,6 @@ var resetAnimationTime = Date.now();
 var previousHeroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
 let currentLevel = [];
 
-let points = 0;
-
 let gameStarted = false;
 let gameOver = false;
 
@@ -133,7 +131,6 @@ var resetGame = function() {
     };
     loadLevel(currentLevelIndex);
     scrollX = 0;
-    points = 0;
     hoverjump = false;
     heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
     heroDirection = HERO_DIRECTION.RIGHT;
@@ -146,7 +143,6 @@ var resetGame = function() {
     scrollX = 0;
     resetAnimationTime = Date.now();
     previousHeroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
-    points = 0;
     distanceFromFloor = 0;
     nearestFloorHeight = -HERO_HEIGHT;
     newJumpPress = false;
@@ -156,16 +152,9 @@ var resetGame = function() {
 }
 
 var finishLevelAfterHug = function() {
-    if (currentLevelIndex < levels.length - 1) {
-        const score = points;
-        currentLevelIndex++;
-        resetGame();
-        points = score;
-    } else {
-        jamesHug = null;
-        demoComplete = true;
-        gameStarted = false;
-    }
+    jamesHug = null;
+    demoComplete = true;
+    gameStarted = false;
 }
 
 /* Game Over Screen */
@@ -485,7 +474,6 @@ var gameLoop = function(interval) {
     if (touchedWings.top || touchedWings.bottom || 
         touchedWings.left || touchedWings.right) {
         if (currentLevel[13][82] == 10) {
-            points += 800;
             currentLevel[13][82] = 0;
         }
         hoverjump = true;
@@ -493,23 +481,6 @@ var gameLoop = function(interval) {
             jumpAnimationPhase === "normal") {
             jumpAnimationPhase = "flight";
             jumpPhaseStartedAt = animationTime;
-        }
-    }
-
-    /* Golden Cross */
-    let touchedCross = {top: false, topY:null, 
-        bottom:false, left: false, right: false};
-    checkSpriteTileCollision({
-        levelX: hero.levelX+(hero.spriteWidth-HERO_HITBOX_WIDTH)/2,
-        levelY: hero.levelY,
-        spriteWidth: HERO_HITBOX_WIDTH,
-        spriteHeight: hero.spriteHeight
-    }, 102*TILE_SIZE, 2*TILE_SIZE, 10, touchedCross);
-    if (touchedCross.top || touchedCross.bottom || 
-        touchedCross.left || touchedCross.right) {
-        if (currentLevel[2][102] == 12) {
-            points += 10000;
-            currentLevel[2][102] = 0;
         }
     }
 
@@ -575,9 +546,6 @@ setInterval(function() {
         }
         gameLoop(interval);
         drawLevelItemStatus();
-        context.font = "28px Luminari, fantasy";
-        context.fillStyle = "rgb(255, 247, 227)";
-        context.fillText(points + " Pts", 10, 50);
     }
     previousFrameTime = now;
     frameCounter++;

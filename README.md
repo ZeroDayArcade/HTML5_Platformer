@@ -22,7 +22,7 @@ This demo contains one small level but illustrates the concepts above. The way i
 
 Level backgrounds are loaded by level order from `assets/backgrounds/levelN.png` (for example, Level 1 uses `level1.png`).
 The opening and game-over screens use `assets/backgrounds/begining.png` and `assets/backgrounds/game_over.png`.
-The level-complete screen layers `assets/backgrounds/level complete.png` over the current level background.
+The level-complete screen layers `assets/backgrounds/level complete.png` over the current level background. It appears after every level; press Esc to continue to the next level or return to the title after the last level.
 
 Level map values use numbered tile images: `0` is empty, and a positive value `N` draws `assets/props/N.png`. The sleep-powder pickup uses `assets/props/10.png`.
 
@@ -41,7 +41,7 @@ Level map values use numbered tile images: `0` is empty, and a positive value `N
     <li>S: Attack</li>
 </ul>
 
-Level 2 is a longer platforming course with increasingly wide pits, stepping platforms, and an elevated sleep-powder pickup. Its armored pig patrols like the Ribbon Pig but cannot be defeated by ordinary attacks. Collect the powder and land a successful S attack to put it to sleep; a missed attack does not consume the powder. The other collectable items are the Wing Amulet, which lets Sonia hover by holding W, and the Golden Cross, which gives 10,000 points. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
+Level 2 is a longer platforming course with increasingly wide pits, stepping platforms, and an elevated sleep-powder pickup. Its armored pig patrols like the Ribbon Pig but cannot be defeated by ordinary attacks. Collect the powder and land a successful S attack to put it to sleep; a missed attack does not consume the powder. The Wing Amulet lets Sonia hover by holding W. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
 
 
 # Running Locally

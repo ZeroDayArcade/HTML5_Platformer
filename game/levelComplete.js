@@ -8,6 +8,7 @@ const LEVEL_COMPLETE_TITLE_SOURCE = {
 };
 
 var demoCompleteScreen = function(now, oldTime) {
+    const hasNextLevel = currentLevelIndex < levels.length - 1;
     drawLevelBackground(levelBackgrounds[currentLevelIndex], 0);
 
     if (levelCompleteTitleImage.complete &&
@@ -19,35 +20,38 @@ var demoCompleteScreen = function(now, oldTime) {
             titleSource.y,
             titleSource.width,
             titleSource.height,
-            148,
-            8,
-            520,
-            221
+            168,
+            12,
+            480,
+            204
         );
     }
 
     context.textAlign = "center";
-    context.font = "bold 24px sans-serif";
+    context.font = "bold 22px sans-serif";
     context.lineWidth = 4;
     context.strokeStyle = "rgba(35, 22, 53, 0.9)";
-    context.fillStyle = "#ffffff";
-    const zeroPad = function(score, places) {
-        return String(score).padStart(places, "0");
-    };
-    const scoreText = "Score: " + zeroPad(points, 5) + " Pts";
-    context.strokeText(scoreText, SCREEN_WIDTH / 2, 268);
-    context.fillText(scoreText, SCREEN_WIDTH / 2, 268);
-
-    context.font = "bold 22px sans-serif";
     context.fillStyle = "rgba(255, 247, 227, " +
         (0.75 + 0.25 * Math.cos(now / 500)) + ")";
-    context.strokeText("Press ESC to Exit", SCREEN_WIDTH / 2, 307);
-    context.fillText("Press ESC to Exit", SCREEN_WIDTH / 2, 307);
+    const prompt = hasNextLevel
+        ? "Press ESC to Continue"
+        : "Press ESC to Return to Title";
+    context.strokeText(prompt, SCREEN_WIDTH / 2, 274);
+    context.fillText(prompt, SCREEN_WIDTH / 2, 274);
     context.textAlign = "start";
 
-    drawReunionAnimation(SCREEN_WIDTH / 2, 350, now);
+    drawReunionAnimation(SCREEN_WIDTH / 2, 326, now, 1.5);
     if (pressedKeys["27"]) {
-        resetGame();
+        pressedKeys["27"] = false;
         demoComplete = false;
+        if (hasNextLevel) {
+            currentLevelIndex++;
+            resetGame();
+            gameStarted = true;
+        } else {
+            currentLevelIndex = 0;
+            resetGame();
+            gameStarted = false;
+        }
     }
 }

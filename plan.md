@@ -17,7 +17,7 @@
 - The project is a plain HTML/CSS/JavaScript game with assets loaded locally from `index.html`.
 - `main.js` contains the main loop, movement, physics, collision, rendering, and game-state screens.
 - Level tilemaps live in separate files under `levels/` and register in load order through `window.gameLevels`. A `-1` tile marks James's spawn; enemy positions use `{ column, floorRow }` tile coordinates, where `column` is the pig's left edge and `floorRow` is its supporting row. `main.js` validates and converts these positions to pixels.
-- There are currently two levels. Reaching the end of the first automatically loads the second; completing the last loaded level shows the completion screen.
+- There are currently two levels. Completing a level shows its completion screen; press Esc to continue to the next level or return to the title after the last level.
 - Level 1 now has two bottom-floor pits around a ground patrol area for the
   ribbon pig enemy.
 - The ribbon pig is level-one-only, patrols left and right, turns around when
@@ -37,7 +37,7 @@
   cannot defeat its armored pig; a successful attack with the powder puts it
   to sleep and consumes the item.
 - The movement, collision, and rendering systems have not yet been redesigned.
-  The wing and Golden Cross collectibles still use hard-coded coordinates;
+  The wing collectible still uses a hard-coded coordinate;
   level-specific items such as sleep powder are stored with their level data.
 
 ## Three-level progression (latest proposal; details to confirm)
