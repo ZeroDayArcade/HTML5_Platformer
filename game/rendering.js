@@ -1,5 +1,49 @@
 /* Canvas rendering helpers. */
 
+var drawLevelBackground = function(background, backgroundScrollX) {
+    if (background &&
+        background.complete &&
+        background.naturalWidth > 0) {
+        const scale = Math.max(
+            SCREEN_WIDTH / background.naturalWidth,
+            SCREEN_HEIGHT / background.naturalHeight
+        );
+        const width = background.naturalWidth * scale;
+        const height = background.naturalHeight * scale;
+        context.drawImage(
+            background,
+            (SCREEN_WIDTH - width) / 2,
+            (SCREEN_HEIGHT - height) / 2,
+            width,
+            height
+        );
+        return;
+    }
+
+    /* Draw parallax until this level's background image is ready. */
+    for (var i = 0; i < layers.length; i++) {
+        if (i === 0) {
+            context.drawImage(layers[i], 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        } else {
+            var sx = 0.0050 * backgroundScrollX * Math.pow(2, i);
+            if (i === 1) sx -= 0;
+            else if (i === 4) sx -= Math.floor(sx / 263) * 263;
+            else sx -= Math.floor(sx / 272) * 272;
+            context.drawImage(
+                layers[i],
+                sx,
+                0,
+                272,
+                160,
+                0,
+                0,
+                SCREEN_WIDTH,
+                SCREEN_HEIGHT
+            );
+        }
+    }
+}
+
 var drawJamesFrame = function(frame, x, y, width) {
     if (!frame || !frame.complete || frame.naturalWidth === 0) {
         return;

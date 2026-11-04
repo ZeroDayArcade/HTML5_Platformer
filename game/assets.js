@@ -8,6 +8,12 @@ window.onkeyup   = function(e) { pressedKeys[e.keyCode] = false; }
 window.onkeydown = function(e) { pressedKeys[e.keyCode] = true;  }
 
 const titleScreen = document.getElementById("title-screen");
+const gameOverScreenBackground = document.getElementById("game-over-screen");
+const levelCompleteTitleImage = new Image();
+levelCompleteTitleImage.onerror = function() {
+    console.error("Failed to load level-complete title: assets/backgrounds/level complete.png");
+};
+levelCompleteTitleImage.src = "assets/backgrounds/level complete.png";
 
 const layers = [
     document.getElementById("parallax-mountain-bg"),

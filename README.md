@@ -21,12 +21,14 @@ It could use a bit of performance optimization and variable consolidation, but p
 This demo contains one small level but illustrates the concepts above. The way it is written makes it easy to add and edit levels using 2D level arrays.
 
 Level backgrounds are loaded by level order from `assets/backgrounds/levelN.png` (for example, Level 1 uses `level1.png`).
+The opening and game-over screens use `assets/backgrounds/begining.png` and `assets/backgrounds/game_over.png`.
+The level-complete screen layers `assets/backgrounds/level complete.png` over the current level background.
 
 Level map values use numbered tile images: `0` is empty, and a positive value `N` draws `assets/props/N.png`. The sleep-powder pickup uses `assets/props/10.png`.
 
 ## Code layout
 
-`index.html` loads classic scripts in dependency order: level data, `game/assets.js`, `game/level.js`, `game/enemies.js`, `game/rendering.js`, `game/opening.js`, then `main.js`. The opening menu has its own module, while `main.js` owns shared game state, game-over/completion screens, and the main loop. Classic scripts preserve support for opening `index.html` directly from disk.
+`index.html` loads classic scripts in dependency order: level data, `game/assets.js`, `game/level.js`, `game/enemies.js`, `game/rendering.js`, `game/opening.js`, `game/levelComplete.js`, then `main.js`. The opening menu and level-complete screen have their own modules, while `main.js` owns shared game state, the game-over screen, and the main loop. Classic scripts preserve support for opening `index.html` directly from disk.
 
 # <a href="https://zerodayarcade.com/demos/platformer">Live Demo</a>
 

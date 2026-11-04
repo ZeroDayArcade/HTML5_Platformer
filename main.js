@@ -170,50 +170,26 @@ var finishLevelAfterHug = function() {
 
 /* Game Over Screen */
 var gameOverScreen = function(now, oldTime) {
-    context.fillStyle = "black";
-    context.fillRect(0, 0, 816, 480);
-    context.font = "90px Luminari, fantasy";
-    context.fillStyle = "red";
-    context.fillText("Game Over", 170, 140);
-    context.font = "60px Luminari, fantasy";
-    context.fillStyle = "rgb(255, 247, 227, " + 
-        (0.50+0.10*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
-    context.fillText("Press ESC to Restart", 170, 260);
-    let currentFrame = getAnimationFrame(HERO_ANIMATION.HURT_RIGHT, Date.now());
-    drawHeroFrame(
-        HERO_ANIMATION.HURT_RIGHT,
-        currentFrame,
-        SCREEN_WIDTH / 2 - 100,
-        280,
-        200,
-        150
+    context.drawImage(
+        gameOverScreenBackground,
+        0,
+        0,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT
     );
+    context.font = "bold 28px sans-serif";
+    context.textAlign = "center";
+    context.lineWidth = 4;
+    context.strokeStyle = "rgba(35, 22, 53, 0.9)";
+    context.fillStyle = "rgba(255, 247, 227, " +
+        (0.75 + 0.25 * Math.cos(now / 500)) + ")";
+    context.strokeText("Press ESC to Restart", SCREEN_WIDTH / 2, 275);
+    context.fillText("Press ESC to Restart", SCREEN_WIDTH / 2, 275);
+    context.textAlign = "start";
     if (pressedKeys["27"]) {
         resetGame();
         gameOver = false;
         gameStarted = true;
-    }
-}
-
-/* Level / Demo Complete Screen */
-var demoCompleteScreen = function(now, oldTime) {
-    context.fillStyle = "rgb(67, 67, 67)";
-    context.fillRect(0, 0, 816, 480);
-    context.font = "90px Luminari, fantasy";
-    context.fillStyle = "#4BB543";
-    context.fillText("Level Complete", 90, 140);
-    context.font = "60px Luminari, fantasy";
-    context.fillStyle = "white";
-    const zeroPad = (num, places) => String(num).padStart(places, '0');
-    context.fillText("Score: " + zeroPad(points, 5) + " Pts", 180, 220);
-    context.font = "50px Luminari, fantasy";
-    context.fillStyle = "rgb(255, 247, 227, " + 
-        (0.50+0.10*Math.cos(2*3.1415*(Math.round(now - oldTime)/1000))) + ")";
-    context.fillText("Press ESC to Exit", 200, 290);
-    drawReunionAnimation(SCREEN_WIDTH / 2, 340, now);
-    if (pressedKeys["27"]) {
-        resetGame();
-        demoComplete = false;
     }
 }
 
@@ -264,43 +240,7 @@ var gameLoop = function(interval) {
     hero.renderX = hero.levelX - scrollX;
     hero.renderY = hero.levelY;
 
-    const levelBackground = levelBackgrounds[currentLevelIndex];
-    if (levelBackground &&
-        levelBackground.complete &&
-        levelBackground.naturalWidth > 0) {
-        const scale = Math.max(
-            SCREEN_WIDTH / levelBackground.naturalWidth,
-            SCREEN_HEIGHT / levelBackground.naturalHeight
-        );
-        const width = levelBackground.naturalWidth * scale;
-        const height = levelBackground.naturalHeight * scale;
-        context.drawImage(
-            levelBackground,
-            (SCREEN_WIDTH - width) / 2,
-            (SCREEN_HEIGHT - height) / 2,
-            width,
-            height
-        );
-    } else {
-        /* Draw parallax until this level's background image is ready. */
-        for (var i=0; i<layers.length; i++) {
-            if (i==0) {
-                context.drawImage(layers[i], 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-            } else {
-                var sx=0.0050*scrollX*Math.pow(2, i);
-                if (i==1) sx-=0;
-                else if (i==4) sx-=Math.floor(sx/263)*263;
-                else sx-=Math.floor(sx/272)*272;
-                var sy=0;
-                var swidth=272;
-                var sheight=160;
-                context.drawImage(
-                    layers[i], sx, sy, swidth, sheight,
-                    0, 0, SCREEN_WIDTH, SCREEN_HEIGHT
-                );
-            }
-        }
-    }
+    drawLevelBackground(levelBackgrounds[currentLevelIndex], scrollX);
 
     drawLevelTiles(
         currentLevel,
