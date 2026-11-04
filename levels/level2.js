@@ -71,10 +71,6 @@ window.gameLevelConfigs[window.gameLevels.length - 1] = {
     ],
 };
 
-window.gameLevelOneWayPlatforms = window.gameLevelOneWayPlatforms || [];
-window.gameLevelOneWayPlatforms[window.gameLevels.length - 1] =
-    level2Platforms;
-
 window.gameLevelEnemies = window.gameLevelEnemies || [];
 window.gameLevelEnemies[window.gameLevels.length - 1] = [
     {

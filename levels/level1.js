@@ -27,20 +27,6 @@ window.gameLevelConfigs[window.gameLevels.length - 1] = {
     },
 };
 
-var level1Platforms = [
-    { row: 13, start: 9, end: 9 },
-    { row: 12, start: 12, end: 12 },
-    { row: 11, start: 15, end: 24 },
-    { row: 11, start: 26, end: 26 },
-    { row: 9, start: 30, end: 30 },
-    { row: 8, start: 34, end: 34 },
-    { row: 7, start: 38, end: 38 },
-    { row: 9, start: 40, end: 44 },
-];
-
-window.gameLevelOneWayPlatforms = window.gameLevelOneWayPlatforms || [];
-window.gameLevelOneWayPlatforms[window.gameLevels.length - 1] = level1Platforms;
-
 window.gameLevelEnemies = window.gameLevelEnemies || [];
 window.gameLevelEnemies[window.gameLevels.length - 1] = [
     {

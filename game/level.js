@@ -104,8 +104,6 @@ var checkSpriteTileCollision = function(sprite, tileX, tileY, tileIndex, collisi
 var checkSpriteTileCollisions = function(sprite, level) {
     let levelWidth = level[0].length;
     let levelHeight = level.length;
-    const oneWayPlatforms =
-        (window.gameLevelOneWayPlatforms || [])[currentLevelIndex] || [];
     let collisions = {
         left: false,
         right: false,
@@ -116,27 +114,6 @@ var checkSpriteTileCollisions = function(sprite, level) {
     for (let i=0; i<levelWidth; i++) {
         for (let j=0; j<levelHeight; j++) {
             if (level[j][i] != 0) {
-                const platform = oneWayPlatforms.find(function(candidate) {
-                    return candidate.row === j &&
-                        i >= candidate.start &&
-                        i <= candidate.end;
-                });
-                if (platform) {
-                    const tileY = j * TILE_SIZE;
-                    const tileX = i * TILE_SIZE;
-                    const spriteBottom = sprite.levelY + sprite.spriteHeight;
-                    const overlapsHorizontally =
-                        sprite.levelX + sprite.spriteWidth > tileX &&
-                        sprite.levelX < tileX + TILE_SIZE;
-                    if (overlapsHorizontally &&
-                        hero.velocityY >= 0 &&
-                        spriteBottom >= tileY &&
-                        spriteBottom - hero.velocityY <= tileY) {
-                        collisions.top = true;
-                        collisions.topY = tileY;
-                    }
-                    continue;
-                }
                 checkSpriteTileCollision(sprite, i*TILE_SIZE, 
                     j*TILE_SIZE, level[j][i], collisions);
             }
