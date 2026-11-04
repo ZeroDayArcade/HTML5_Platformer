@@ -22,6 +22,10 @@ This demo contains one small level but illustrates the concepts above. The way i
 
 Level backgrounds are loaded by level order from `assets/backgrounds/levelN.png` (for example, Level 1 uses `level1.png`).
 
+## Code layout
+
+`index.html` loads classic scripts in dependency order: level data, `game/assets.js`, `game/level.js`, `game/enemies.js`, `game/rendering.js`, then `main.js`. The game helpers are grouped by responsibility, while `main.js` owns shared game state, screens, and the main loop. Classic scripts preserve support for opening `index.html` directly from disk.
+
 # <a href="https://zerodayarcade.com/demos/platformer">Live Demo</a>
 
 
