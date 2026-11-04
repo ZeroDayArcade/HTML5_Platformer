@@ -34,15 +34,15 @@ var demoCompleteScreen = function(now, oldTime) {
     context.fillStyle = "rgba(255, 247, 227, " +
         (0.75 + 0.25 * Math.cos(now / 500)) + ")";
     const prompt = hasNextLevel
-        ? "Press ESC to Continue"
-        : "Press ESC to Return to Title";
+        ? "Press ENTER to Continue"
+        : "Press ENTER to Return to Title";
     context.strokeText(prompt, SCREEN_WIDTH / 2, 274);
     context.fillText(prompt, SCREEN_WIDTH / 2, 274);
     context.textAlign = "start";
 
     drawReunionAnimation(SCREEN_WIDTH / 2, 326, now, 1.5);
-    if (pressedKeys["27"]) {
-        pressedKeys["27"] = false;
+    if (pressedKeys["13"]) {
+        pressedKeys["13"] = false;
         demoComplete = false;
         if (hasNextLevel) {
             currentLevelIndex++;

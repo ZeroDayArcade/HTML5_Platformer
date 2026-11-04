@@ -22,7 +22,7 @@ This demo contains one small level but illustrates the concepts above. The way i
 
 Level backgrounds are loaded by level order from `assets/backgrounds/levelN.png` (for example, Level 1 uses `level1.png`).
 The opening and game-over screens use `assets/backgrounds/begining.png` and `assets/backgrounds/game_over.png`.
-The level-complete screen layers `assets/backgrounds/level complete.png` over the current level background. It appears after every level; press Esc to continue to the next level or return to the title after the last level.
+The level-complete screen layers `assets/backgrounds/level complete.png` over the current level background. It appears after every level; press Enter to continue to the next level or return to the title after the last level.
 
 Level map values use numbered tile images: `0` is empty, and a positive value `N` draws `assets/props/N.png`. The sleep-powder pickup uses `assets/props/10.png`.
 

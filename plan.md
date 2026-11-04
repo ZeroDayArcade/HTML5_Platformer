@@ -17,7 +17,7 @@
 - The project is a plain HTML/CSS/JavaScript game with assets loaded locally from `index.html`.
 - `main.js` contains the main loop, movement, physics, collision, rendering, and game-state screens.
 - Level tilemaps live in separate files under `levels/` and register in load order through `window.gameLevels`. A `-1` tile marks James's spawn; enemy positions use `{ column, floorRow }` tile coordinates, where `column` is the pig's left edge and `floorRow` is its supporting row. `main.js` validates and converts these positions to pixels.
-- There are currently two levels. Completing a level shows its completion screen; press Esc to continue to the next level or return to the title after the last level.
+- There are currently two levels. Completing a level shows its completion screen; press Enter to continue to the next level or return to the title after the last level.
 - Level 1 now has two bottom-floor pits around a ground patrol area for the
   ribbon pig enemy.
 - The ribbon pig is level-one-only, patrols left and right, turns around when
