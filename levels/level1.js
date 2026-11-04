@@ -16,6 +16,7 @@ var level1Map = [
         [ 1,3,1,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0 ], // row 13
         [ 1,1,1,1,1,1,1,1, 4,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,1,1,1, 8,1,1,1,1,8,1,1, 1 ], // row 14
     ];
+level1Map[14][49] = -1; // James spawn marker
 window.gameLevels.push(level1Map);
 
 window.gameLevelConfigs = window.gameLevelConfigs || [];
@@ -23,10 +24,6 @@ window.gameLevelConfigs[window.gameLevels.length - 1] = {
     size: {
         width: level1Map[0].length,
         height: level1Map.length,
-    },
-    jamesPosition: {
-        tileX: 49,
-        supportRow: 14,
     },
 };
 
@@ -46,6 +43,14 @@ window.gameLevelOneWayPlatforms[window.gameLevels.length - 1] = level1Platforms;
 
 window.gameLevelEnemies = window.gameLevelEnemies || [];
 window.gameLevelEnemies[window.gameLevels.length - 1] = [
-    { type: "ribbon_pig", x: 18 * 32, supportRow: 11, direction: 1 },
-    { type: "ribbon_pig", x: 42 * 32, supportRow: 9, direction: 1 },
+    {
+        type: "ribbon_pig",
+        tilePosition: { column: 18, floorRow: 11 },
+        direction: 1,
+    },
+    {
+        type: "ribbon_pig",
+        tilePosition: { column: 42, floorRow: 9 },
+        direction: 1,
+    },
 ];

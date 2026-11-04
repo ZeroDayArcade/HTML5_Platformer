@@ -16,7 +16,7 @@
 
 - The project is a plain HTML/CSS/JavaScript game with assets loaded locally from `index.html`.
 - `main.js` contains the main loop, movement, physics, collision, rendering, and game-state screens.
-- Level tilemaps live in separate files under `levels/` and register in load order through `window.gameLevels`. Each level file also declares its map dimensions and James's reunion position; `main.js` validates and uses that level-specific configuration.
+- Level tilemaps live in separate files under `levels/` and register in load order through `window.gameLevels`. A `-1` tile marks James's spawn; enemy positions use `{ column, floorRow }` tile coordinates, where `column` is the pig's left edge and `floorRow` is its supporting row. `main.js` validates and converts these positions to pixels.
 - There are currently two levels. Reaching the end of the first automatically loads the second; completing the last loaded level shows the completion screen.
 - Level 1 now has two bottom-floor pits around a ground patrol area for the
   ribbon pig enemy.
@@ -32,7 +32,13 @@
   collision and patrol.
 - The game-over screen uses the existing hurt animation and labels Escape as
   the restart control.
-- The movement, collision, and rendering systems have not yet been redesigned. Collectible locations and behavior are still partly hard-coded in `main.js`.
+- Level 2 is a longer, three-screen route with progressively wider pits,
+  stepping platforms, and an elevated sleep-powder pickup. Ordinary attacks
+  cannot defeat its armored pig; a successful attack with the powder puts it
+  to sleep and consumes the item.
+- The movement, collision, and rendering systems have not yet been redesigned.
+  The wing and Golden Cross collectibles still use hard-coded coordinates;
+  level-specific items such as sleep powder are stored with their level data.
 
 ## Three-level progression (latest proposal; details to confirm)
 
@@ -48,10 +54,9 @@ game should now be exactly three levels (rather than the previously confirmed
    particularly fierce pig creature. Teach its threat and attack timing before
    asking the player to handle multiple hazards at once.
 2. **Find another way** — Introduce armored enemies that cannot be defeated by
-   ordinary attacks. The player must find and use a special item to make them
-   fall asleep, then proceed past them. The item's identity, acquisition point,
-   and whether its effect is temporary or persistent are not decided yet.
-   Reinforce that attacking is not the solution to every obstacle.
+   ordinary attacks. The player finds sleep powder on a raised platform route;
+   a successful attack makes the pig sleep and consumes the powder. Reinforce
+   that attacking is not the solution to every obstacle.
 3. **The way to space** — Reuse the armored-enemy/item lesson with harder
    platforming and more demanding encounters. James is not waiting at the
    expected destination. A hidden wing item lets the player fly much higher,
@@ -61,8 +66,8 @@ game should now be exactly three levels (rather than the previously confirmed
 
 The phrase "最後中點沒有 James" in the proposal is interpreted here as James
 not being at the expected final destination; confirm if it instead means a
-specific midpoint. These beats are a design proposal, not implemented game
-behavior.
+specific midpoint. The third-level and hidden-route beats remain design
+proposals, not implemented game behavior.
 
 ### Open decisions
 
@@ -70,7 +75,6 @@ behavior.
   4–5-level target, with these three as the main progression.
 - Decide how the wing is hinted at and whether the space meeting is required or
   an optional hidden ending.
-- Define the sleep item's appearance, effect duration, and how it is taught.
 - Decide whether the pig and armored enemies recur in later levels or are
   level-specific.
 

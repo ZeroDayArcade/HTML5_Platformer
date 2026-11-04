@@ -33,7 +33,7 @@ Level backgrounds are loaded by level order from `assets/backgrounds/levelN.png`
     <li>S: Attack</li>
 </ul>
 
-Level 2 includes an armored pig that patrols using the same movement behavior as the Ribbon Pig and is immune to Sonia's attack. There are two collectable items in the demo: (1) The Wing Amulet and (2) The Golden Cross. The Wing Amulet will let you hover/fly by holding W once you collect it, and the Golden Cross gives you 10,000 points. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
+Level 2 is a longer platforming course with increasingly wide pits, stepping platforms, and an elevated sleep-powder pickup. Its armored pig patrols like the Ribbon Pig but cannot be defeated by ordinary attacks. Collect the powder and land a successful S attack to put it to sleep; a missed attack does not consume the powder. The other collectable items are the Wing Amulet, which lets Sonia hover by holding W, and the Golden Cross, which gives 10,000 points. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
 
 
 # Running Locally

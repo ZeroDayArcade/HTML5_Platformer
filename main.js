@@ -35,7 +35,13 @@ const ribbonPigDieFrames = getFrameImages("ribbon-pig-die", 6);
 const ribbonPigDeathEffectFrames = getFrameImages("ribbon-pig-death-effect", 4);
 const armoredPigRunRightFrames = getFrameImages("armored-pig-run-right", 6);
 const armoredPigRunLeftFrames = getFrameImages("armored-pig-run-left", 6);
+const armoredPigDieFrames = getFrameImages("armored-pig-die", 6);
 const RIBBON_PIG_ANIMATION_FPS = 9;
+const sleepPowderImage = new Image();
+sleepPowderImage.onerror = function() {
+    console.error("Failed to load sleep powder image: assets/props/piggy_sleepy.png");
+};
+sleepPowderImage.src = "assets/props/piggy_sleepy.png";
 
 const HERO_DIRECTION = Object.freeze({
     LEFT: "left",
@@ -74,21 +80,44 @@ var getAnimationFrame = function(animationIndex, elapsedMs) {
     return Math.floor(elapsedMs * animation.fps / 1000) % frameCount;
 }
 
-var getJamesLevelEndPosition = function(level, levelConfig) {
+const LEVEL_MAP_JAMES_MARKER = -1;
+
+var extractJamesTilePosition = function(level, levelIndex) {
+    let jamesPosition = null;
+    level.forEach(function(row, rowIndex) {
+        row.forEach(function(tile, column) {
+            if (tile !== LEVEL_MAP_JAMES_MARKER) {
+                return;
+            }
+            if (jamesPosition) {
+                throw new Error("Level " + levelIndex + " has multiple James markers.");
+            }
+            jamesPosition = { column: column, floorRow: rowIndex };
+            row[column] = 1;
+        });
+    });
+    if (!jamesPosition) {
+        throw new Error("Level " + levelIndex + " is missing its James marker.");
+    }
+    return jamesPosition;
+}
+
+var getJamesLevelEndPosition = function(level, tilePosition) {
     const jamesWidth = 128;
     const jamesHeight = 96;
-    const jamesTileX = levelConfig.jamesPosition.tileX;
-    if (!Number.isInteger(jamesTileX) || jamesTileX < 0 ||
-        (jamesTileX + jamesWidth / TILE_SIZE) > levelConfig.size.width) {
+    if (!tilePosition ||
+        !Number.isInteger(tilePosition.column) ||
+        tilePosition.column < 0 ||
+        (tilePosition.column + jamesWidth / TILE_SIZE) > level[0].length) {
         throw new Error("James position is outside level " + currentLevelIndex);
     }
-    const jamesLevelX = jamesTileX * TILE_SIZE;
-    const centerTile = Math.min(
-        levelConfig.size.width - 1,
-        Math.floor((jamesLevelX + jamesWidth / 2) / TILE_SIZE)
+    const jamesLevelX = tilePosition.column * TILE_SIZE;
+    const centerTile = Math.floor(
+        (jamesLevelX + jamesWidth / 2) / TILE_SIZE
     );
-    const floorRow = levelConfig.jamesPosition.supportRow;
+    const floorRow = tilePosition.floorRow;
     if (!Number.isInteger(floorRow) ||
+        floorRow < 0 ||
         !level[floorRow] ||
         level[floorRow][centerTile] === 0) {
         throw new Error("James has no supporting floor in level " + currentLevelIndex);
@@ -213,6 +242,7 @@ var levels = window.gameLevels || [];
 var levelConfigs = window.gameLevelConfigs || [];
 let currentLevelIndex = 0;
 let currentLevelConfig = null;
+let currentLevelJamesTilePosition = null;
 
 if (levels.length === 0) {
     throw new Error("No levels loaded. Check the level script tags in index.html.");
@@ -234,7 +264,7 @@ var loadLevel = function(levelIndex) {
     if (!level) {
         throw new Error("Level " + levelIndex + " does not exist.");
     }
-    if (!levelConfig || !levelConfig.size || !levelConfig.jamesPosition) {
+    if (!levelConfig || !levelConfig.size) {
         throw new Error("Level " + levelIndex + " is missing its configuration.");
     }
     const { width, height } = levelConfig.size;
@@ -246,7 +276,22 @@ var loadLevel = function(levelIndex) {
     }
     currentLevel = JSON.parse(JSON.stringify(level));
     currentLevelConfig = levelConfig;
-    getJamesLevelEndPosition(currentLevel, currentLevelConfig);
+    currentLevelJamesTilePosition =
+        extractJamesTilePosition(currentLevel, levelIndex);
+    levelItems = (levelConfig.items || []).map(function(item) {
+        if (item.type !== "sleep_powder" ||
+            !Number.isFinite(item.x) ||
+            !Number.isFinite(item.y) ||
+            !Number.isFinite(item.width) ||
+            !Number.isFinite(item.height) ||
+            item.width <= 0 ||
+            item.height <= 0) {
+            throw new Error("Level " + levelIndex + " has an invalid item definition.");
+        }
+        return Object.assign({ collected: false }, item);
+    });
+    hasSleepPowder = false;
+    getJamesLevelEndPosition(currentLevel, currentLevelJamesTilePosition);
     resetLevelEnemies(levelIndex);
 }
 
@@ -278,6 +323,8 @@ let hero = {
 }
 
 let levelEnemies = [];
+let levelItems = [];
+let hasSleepPowder = false;
 
 var resetLevelEnemies = function(levelIndex) {
     const definitions = (window.gameLevelEnemies || [])[levelIndex] || [];
@@ -286,29 +333,28 @@ var resetLevelEnemies = function(levelIndex) {
             definition.type !== "armored_pig") {
             throw new Error("Unknown level enemy type: " + definition.type);
         }
-        const centerColumn = Math.floor(
-            (definition.x + RIBBON_PIG_WIDTH / 2) / TILE_SIZE
-        );
-        let floorRow = definition.supportRow;
-        if (floorRow === undefined) {
-            floorRow = -1;
-            for (let row = currentLevel.length - 1; row >= 0; row--) {
-                if (currentLevel[row][centerColumn] !== 0) {
-                    floorRow = row;
-                    break;
-                }
-            }
-        } else if (!Number.isInteger(floorRow) ||
-            !currentLevel[floorRow] ||
-            currentLevel[floorRow][centerColumn] === 0) {
-            throw new Error("Level enemy spawn has no supporting floor.");
+        const tilePosition = definition.tilePosition;
+        if (!tilePosition ||
+            !Number.isInteger(tilePosition.column) ||
+            tilePosition.column < 0 ||
+            !Number.isInteger(tilePosition.floorRow) ||
+            tilePosition.floorRow < 0 ||
+            tilePosition.column +
+                RIBBON_PIG_WIDTH / TILE_SIZE > currentLevelConfig.size.width) {
+            throw new Error("Level enemy has an invalid tile position.");
         }
-        if (floorRow < 0) {
+        const levelX = tilePosition.column * TILE_SIZE;
+        const centerColumn = Math.floor(
+            (levelX + RIBBON_PIG_WIDTH / 2) / TILE_SIZE
+        );
+        const floorRow = tilePosition.floorRow;
+        if (!currentLevel[floorRow] ||
+            currentLevel[floorRow][centerColumn] === 0) {
             throw new Error("Level enemy spawn has no supporting floor.");
         }
         return {
             type: definition.type,
-            levelX: definition.x,
+            levelX: levelX,
             levelY: floorRow * TILE_SIZE - RIBBON_PIG_HEIGHT,
             direction: definition.direction < 0 ? -1 : 1,
             startedAt: Date.now(),
@@ -319,6 +365,9 @@ var resetLevelEnemies = function(levelIndex) {
 
 var updateLevelEnemies = function(deltaSeconds, now) {
     levelEnemies.forEach(function(enemy) {
+        if (enemy.state === "sleeping") {
+            return;
+        }
         if (enemy.type === "ribbon_pig" && enemy.state === "dying") {
             if (now - enemy.diedAt >=
                 ribbonPigDieFrames.length * 1000 / RIBBON_PIG_ANIMATION_FPS) {
@@ -376,9 +425,11 @@ var drawLevelEnemies = function(now) {
     levelEnemies.forEach(function(enemy) {
         const isArmoredPig = enemy.type === "armored_pig";
         const frames = isArmoredPig
-            ? enemy.direction > 0
-                ? armoredPigRunRightFrames
-                : armoredPigRunLeftFrames
+            ? enemy.state === "sleeping"
+                ? armoredPigDieFrames
+                : enemy.direction > 0
+                    ? armoredPigRunRightFrames
+                    : armoredPigRunLeftFrames
             : enemy.state === "dying"
                 ? ribbonPigDieFrames
                 : enemy.state === "death_effect"
@@ -386,7 +437,15 @@ var drawLevelEnemies = function(now) {
                     : enemy.direction > 0
                         ? ribbonPigRunRightFrames
                         : ribbonPigRunLeftFrames;
-        const frameIndex = !isArmoredPig && enemy.state === "dying"
+        const frameIndex = isArmoredPig && enemy.state === "sleeping"
+            ? Math.min(
+                frames.length - 1,
+                Math.floor(
+                    (now - enemy.asleepAt) *
+                        RIBBON_PIG_ANIMATION_FPS / 1000
+                )
+            )
+            : !isArmoredPig && enemy.state === "dying"
             ? Math.min(
                 frames.length - 1,
                 Math.floor(
@@ -423,8 +482,82 @@ var drawLevelEnemies = function(now) {
             } else {
                 context.drawImage(frame, enemy.levelX - scrollX, enemy.levelY);
             }
+            if (isArmoredPig &&
+                enemy.state === "sleeping" &&
+                frameIndex === armoredPigDieFrames.length - 1) {
+                const sleepTextX = enemy.levelX - scrollX + RIBBON_PIG_WIDTH / 2;
+                const sleepTextY = enemy.levelY - 4;
+                context.font = "16px monospace";
+                context.textAlign = "center";
+                context.lineWidth = 3;
+                context.strokeStyle = "#342b56";
+                context.fillStyle = "#fff4b8";
+                context.strokeText("Zzz", sleepTextX, sleepTextY);
+                context.fillText("Zzz", sleepTextX, sleepTextY);
+                context.textAlign = "start";
+            }
         }
     });
+}
+
+var drawLevelItems = function() {
+    levelItems.forEach(function(item) {
+        if (item.collected || !sleepPowderImage.complete ||
+            sleepPowderImage.naturalWidth === 0) {
+            return;
+        }
+        context.drawImage(
+            sleepPowderImage,
+            item.x - scrollX,
+            item.y,
+            item.width,
+            item.height
+        );
+    });
+}
+
+var collectLevelItems = function() {
+    const heroBox = {
+        left: hero.levelX + (hero.spriteWidth - HERO_HITBOX_WIDTH) / 2,
+        right: hero.levelX + (hero.spriteWidth + HERO_HITBOX_WIDTH) / 2,
+        top: hero.levelY + 18,
+        bottom: hero.levelY + hero.spriteHeight - 8,
+    };
+    levelItems.forEach(function(item) {
+        if (item.collected || heroBox.left >= item.x + item.width ||
+            heroBox.right <= item.x ||
+            heroBox.top >= item.y + item.height ||
+            heroBox.bottom <= item.y) {
+            return;
+        }
+        item.collected = true;
+        if (item.type === "sleep_powder") {
+            hasSleepPowder = true;
+        }
+    });
+}
+
+var drawLevelItemStatus = function() {
+    if (!currentLevelConfig ||
+        !(currentLevelConfig.items || []).some(function(item) {
+            return item.type === "sleep_powder";
+        })) {
+        return;
+    }
+    if (hasSleepPowder &&
+        sleepPowderImage.complete &&
+        sleepPowderImage.naturalWidth > 0) {
+        context.drawImage(sleepPowderImage, SCREEN_WIDTH - 180, 10, 36, 24);
+    }
+    context.font = "16px monospace";
+    context.fillStyle = "#fff4b8";
+    context.textAlign = "right";
+    context.fillText(
+        hasSleepPowder ? "POWDER x1 [S]" : "POWDER x0",
+        SCREEN_WIDTH - 10,
+        27
+    );
+    context.textAlign = "start";
 }
 
 var heroTouchesLevelEnemy = function(enemy) {
@@ -492,7 +625,10 @@ var tryHitLevelEnemies = function(frameIndex, now) {
         bottom: hero.levelY + 78,
     };
     levelEnemies.forEach(function(enemy) {
-        if (enemy.type !== "ribbon_pig" ||
+        const canDefeatRibbonPig = enemy.type === "ribbon_pig";
+        const canPutArmoredPigToSleep =
+            enemy.type === "armored_pig" && hasSleepPowder;
+        if ((!canDefeatRibbonPig && !canPutArmoredPigToSleep) ||
             enemy.state !== "alive" ||
             attackState.hitEnemies.has(enemy)) {
             return;
@@ -508,8 +644,14 @@ var tryHitLevelEnemies = function(frameIndex, now) {
             attackBox.top < pigBox.bottom &&
             attackBox.bottom > pigBox.top;
         if (intersects) {
-            enemy.state = "dying";
-            enemy.diedAt = now;
+            if (canDefeatRibbonPig) {
+                enemy.state = "dying";
+                enemy.diedAt = now;
+            } else {
+                enemy.state = "sleeping";
+                enemy.asleepAt = now;
+                hasSleepPowder = false;
+            }
             attackState.hitEnemies.add(enemy);
         }
     });
@@ -773,7 +915,10 @@ var gameLoop = function(interval) {
             : HERO_ANIMATION.IDLE_LEFT;
         resetAnimationTime = animationTime;
     }
-    const jamesPosition = getJamesLevelEndPosition(currentLevel, currentLevelConfig);
+    const jamesPosition = getJamesLevelEndPosition(
+        currentLevel,
+        currentLevelJamesTilePosition
+    );
     if (jamesHug) {
         const elapsed = animationTime - jamesHug.startedAt;
         const progress = Math.min(1, elapsed / 350);
@@ -840,6 +985,7 @@ var gameLoop = function(interval) {
         currentLevelConfig.size.height,
         scrollX
     );
+    drawLevelItems();
     updateLevelEnemies(interval, animationTime);
 
     drawJamesLevelEndPreview(jamesPosition, animationTime - resetAnimationTime);
@@ -1056,6 +1202,8 @@ var gameLoop = function(interval) {
         hero.levelY += hero.velocityY;
     }
 
+    collectLevelItems();
+
     if (checkLevelEnemyCollisions()) {
         gameOver = true;
         gameStarted = false;
@@ -1163,6 +1311,7 @@ setInterval(function() {
             audioPlaying = true;
         }
         gameLoop(interval);
+        drawLevelItemStatus();
         context.font = "28px Luminari, fantasy";
         context.fillStyle = "rgb(255, 247, 227)";
         context.fillText(points + " Pts", 10, 50);
