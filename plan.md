@@ -35,7 +35,7 @@
 - Level 2 is a longer, three-screen route with progressively wider pits,
   stepping platforms, and an elevated sleep-powder pickup. Ordinary attacks
   cannot defeat its armored pig; a successful attack with the powder puts it
-  to sleep and consumes the item.
+  to sleep, and the powder remains in the backpack.
 - The movement, collision, and rendering systems have not yet been redesigned.
   The wing collectible still uses a hard-coded coordinate;
   level-specific items such as sleep powder are stored with their level data.
@@ -55,8 +55,8 @@ game should now be exactly three levels (rather than the previously confirmed
    asking the player to handle multiple hazards at once.
 2. **Find another way** — Introduce armored enemies that cannot be defeated by
    ordinary attacks. The player finds sleep powder on a raised platform route;
-   a successful attack makes the pig sleep and consumes the powder. Reinforce
-   that attacking is not the solution to every obstacle.
+   a successful attack makes the pig sleep, and the powder remains in the
+   backpack. Reinforce that attacking is not the solution to every obstacle.
 3. **The way to space** — Reuse the armored-enemy/item lesson with harder
    platforming and more demanding encounters. James is not waiting at the
    expected destination. A hidden wing item lets the player fly much higher,

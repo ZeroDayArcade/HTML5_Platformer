@@ -28,7 +28,7 @@ Level map values use numbered tile images: `0` is empty, and a positive value `N
 
 ## Code layout
 
-`index.html` loads classic scripts in dependency order: level data, `game/assets.js`, `game/level.js`, `game/enemies.js`, `game/rendering.js`, `game/opening.js`, `game/levelComplete.js`, then `main.js`. The opening menu and level-complete screen have their own modules, while `main.js` owns shared game state, the game-over screen, and the main loop. Classic scripts preserve support for opening `index.html` directly from disk.
+`index.html` loads classic scripts in dependency order: level data, `game/assets.js`, `game/level.js`, `game/enemies.js`, `game/rendering.js`, `game/inventory.js`, `game/opening.js`, `game/levelComplete.js`, then `main.js`. The opening menu, inventory, and level-complete screen have their own modules, while `main.js` owns shared game state, the game-over screen, and the main loop. Classic scripts preserve support for opening `index.html` directly from disk.
 
 # <a href="https://zerodayarcade.com/demos/platformer">Live Demo</a>
 
@@ -39,9 +39,12 @@ Level map values use numbered tile images: `0` is empty, and a positive value `N
     <li>D: Run/Move Right</li>
     <li>W: Jump / Hold to Hover if Wing Amulet has been collected</li>
     <li>S: Attack</li>
+    <li>B: Open/close backpack</li>
+    <li>WASD: Select items while the backpack is open</li>
+    <li>Esc: Close the backpack</li>
 </ul>
 
-Level 2 is a longer platforming course with increasingly wide pits, stepping platforms, and an elevated sleep-powder pickup. Its armored pig patrols like the Ribbon Pig but cannot be defeated by ordinary attacks. Collect the powder and land a successful S attack to put it to sleep; a missed attack does not consume the powder. The Wing Amulet lets Sonia hover by holding W. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
+Level 2 is a longer platforming course with increasingly wide pits, stepping platforms, and an elevated sleep-powder pickup. Its armored pig patrols like the Ribbon Pig but cannot be defeated by ordinary attacks. Collect the powder, select it in the backpack, and land an S attack to put the pig to sleep. The powder is not consumed. The backpack pauses gameplay and displays the selected item's name and use. The Wing Amulet lets Sonia hover by holding W. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
 
 
 # Running Locally

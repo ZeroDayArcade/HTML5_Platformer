@@ -163,7 +163,8 @@ var tryHitLevelEnemies = function(frameIndex, now) {
     levelEnemies.forEach(function(enemy) {
         const canDefeatRibbonPig = enemy.type === "ribbon_pig";
         const canPutArmoredPigToSleep =
-            enemy.type === "armored_pig" && hasSleepPowder;
+            enemy.type === "armored_pig" &&
+            getSelectedInventoryItem() === "sleep_powder";
         if ((!canDefeatRibbonPig && !canPutArmoredPigToSleep) ||
             enemy.state !== "alive" ||
             attackState.hitEnemies.has(enemy)) {
@@ -186,7 +187,6 @@ var tryHitLevelEnemies = function(frameIndex, now) {
             } else {
                 enemy.state = "sleeping";
                 enemy.asleepAt = now;
-                hasSleepPowder = false;
             }
             attackState.hitEnemies.add(enemy);
         }

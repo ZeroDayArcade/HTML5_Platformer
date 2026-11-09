@@ -73,7 +73,7 @@ var loadLevel = function(levelIndex) {
         }
         return Object.assign({ collected: false }, item);
     });
-    hasSleepPowder = false;
+    resetInventoryForLevel();
     getJamesLevelEndPosition(currentLevel, currentLevelJamesTilePosition);
     resetLevelEnemies(levelIndex);
 }
@@ -107,7 +107,6 @@ let hero = {
 
 let levelEnemies = [];
 let levelItems = [];
-let hasSleepPowder = false;
 
 /* Load Game Music */
 var audioElement = document.getElementById("theAudio");
@@ -518,6 +517,7 @@ loadLevel(currentLevelIndex);
 /* Game States */
 setInterval(function() {
     let now = Date.now();
+    updateInventoryInput();
     if (!gameStarted) {
         if (gameOver) {
             if (audioPlaying) {
@@ -544,8 +544,12 @@ setInterval(function() {
             }
             audioPlaying = true;
         }
-        gameLoop(interval);
-        drawLevelItemStatus();
+        if (inventoryOpen) {
+            drawInventoryScreen();
+        } else {
+            gameLoop(interval);
+            drawLevelItemStatus();
+        }
     }
     previousFrameTime = now;
     frameCounter++;
