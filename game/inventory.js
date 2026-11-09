@@ -3,6 +3,7 @@
 const INVENTORY_COLUMNS = 4;
 const INVENTORY_ROWS = 2;
 const INVENTORY_SLOT_COUNT = INVENTORY_COLUMNS * INVENTORY_ROWS;
+const INVENTORY_SLOT_SIZE = 76;
 const INVENTORY_NAVIGATION_KEYS = ["87", "65", "83", "68"];
 const INVENTORY_COLORS = Object.freeze({
     overlay: "rgba(255, 224, 237, 0.42)",
@@ -22,8 +23,8 @@ const INVENTORY_COLORS = Object.freeze({
 const INVENTORY_ITEM_DETAILS = Object.freeze({
     sleep_powder: {
         name: "懶豬豬睡睡粉",
-        usage: "攻擊時可以讓豬豬睡著",
-        note: "",
+        usage: "按 S 攻擊命中豬豬時可使牠睡著。",
+        note: "不會消耗，可重複使用。",
         image: sleepPowderImage,
     },
 });
@@ -177,20 +178,19 @@ var updateInventoryInput = function() {
 }
 
 var drawInventoryWrappedText = function(text, x, y, maxWidth, lineHeight) {
-    const words = text.split(" ");
     let line = "";
-    words.forEach(function(word) {
-        const nextLine = line ? line + " " + word : word;
+    Array.from(text).forEach(function(character) {
+        const nextLine = line + character;
         if (line && context.measureText(nextLine).width > maxWidth) {
-            context.fillText(line, x, y);
+            context.fillText(line.trimEnd(), x, y);
             y += lineHeight;
-            line = word;
+            line = character.trim() ? character : "";
         } else {
             line = nextLine;
         }
     });
     if (line) {
-        context.fillText(line, x, y);
+        context.fillText(line.trimEnd(), x, y);
         y += lineHeight;
     }
     return y;
@@ -214,10 +214,10 @@ var drawInventoryScreen = function() {
     context.textAlign = "left";
     context.font = "bold 24px monospace";
     context.fillStyle = INVENTORY_COLORS.heading;
-    context.fillText("BACKPACK", 86, 82);
+    context.fillText("背包", 86, 82);
     context.font = "14px monospace";
     context.fillStyle = INVENTORY_COLORS.controls;
-    context.fillText("WASD: Select | B / ESC: Close", 440, 80);
+    context.fillText("WASD：選擇道具｜B／Esc：關閉", 440, 80);
 
     for (let slot = 0; slot < INVENTORY_SLOT_COUNT; slot++) {
         const column = slot % INVENTORY_COLUMNS;
@@ -230,15 +230,21 @@ var drawInventoryScreen = function() {
         context.fillStyle = slot === selectedInventorySlot
             ? INVENTORY_COLORS.selectedSlot
             : INVENTORY_COLORS.slot;
-        context.fillRect(x, y, 76, 76);
+        context.fillRect(x, y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE);
+        if (item && item.image.complete && item.image.naturalWidth > 0) {
+            context.drawImage(
+                item.image,
+                x + (INVENTORY_SLOT_SIZE - INVENTORY_SLOT_SIZE) / 2,
+                y + (INVENTORY_SLOT_SIZE - INVENTORY_SLOT_SIZE) / 2,
+                INVENTORY_SLOT_SIZE,
+                INVENTORY_SLOT_SIZE
+            );
+        }
         context.lineWidth = slot === selectedInventorySlot ? 4 : 2;
         context.strokeStyle = slot === selectedInventorySlot
             ? INVENTORY_COLORS.selectedBorder
             : INVENTORY_COLORS.slotBorder;
-        context.strokeRect(x, y, 76, 76);
-        if (item && item.image.complete && item.image.naturalWidth > 0) {
-            context.drawImage(item.image, x + 14, y + 15, 48, 36);
-        }
+        context.strokeRect(x, y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE);
     }
 
     const details = {
@@ -260,7 +266,7 @@ var drawInventoryScreen = function() {
     context.font = "bold 18px monospace";
     context.fillStyle = INVENTORY_COLORS.heading;
     context.fillText(
-        selectedItem ? selectedItem.name : "Empty Slot",
+        selectedItem ? selectedItem.name : "空道具欄",
         details.x + 16,
         details.y + 32
     );
@@ -275,7 +281,7 @@ var drawInventoryScreen = function() {
     let detailY = details.y + 78;
     if (selectedItem) {
         detailY = drawInventoryWrappedText(
-            "Use: " + selectedItem.usage,
+            "使用方式：" + selectedItem.usage,
             details.x + 16,
             detailY,
             details.width - 32,
@@ -292,8 +298,8 @@ var drawInventoryScreen = function() {
     } else {
         drawInventoryWrappedText(
             inventoryItems.length === 0
-                ? "No items collected yet."
-                : "Select a filled slot to see its details.",
+                ? "沒有道具！"
+                : "選擇道具以查看說明。",
             details.x + 16,
             detailY,
             details.width - 32,
@@ -305,7 +311,7 @@ var drawInventoryScreen = function() {
     context.font = "14px monospace";
     context.fillStyle = INVENTORY_COLORS.footer;
     context.fillText(
-        "Select an item, then close the backpack to use it.",
+        "選好道具後關閉背包，即可使用。",
         SCREEN_WIDTH / 2,
         394
     );

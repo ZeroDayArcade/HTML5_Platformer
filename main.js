@@ -548,7 +548,6 @@ setInterval(function() {
             drawInventoryScreen();
         } else {
             gameLoop(interval);
-            drawLevelItemStatus();
         }
     }
     previousFrameTime = now;

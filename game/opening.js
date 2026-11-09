@@ -142,12 +142,13 @@ var drawTitleInstructions = function() {
     context.fillText("操作說明", SCREEN_WIDTH / 2, 145);
     context.fillStyle = "#ffffff";
     context.font = "23px sans-serif";
-    context.fillText("A / D：左右移動", SCREEN_WIDTH / 2, 205);
-    context.fillText("W：跳躍", SCREEN_WIDTH / 2, 252);
-    context.fillText("S：攻擊", SCREEN_WIDTH / 2, 299);
+    context.fillText("A / D：左右移動", SCREEN_WIDTH / 2, 185);
+    context.fillText("W：跳躍", SCREEN_WIDTH / 2, 232);
+    context.fillText("S：攻擊", SCREEN_WIDTH / 2, 279);
+    context.fillText("B：打開背包", SCREEN_WIDTH / 2, 326);
     context.font = "18px sans-serif";
     context.fillStyle = "#fff4b8";
-    context.fillText("按 Esc 或點擊返回", SCREEN_WIDTH / 2, 355);
+    context.fillText("按 Esc 或點擊返回", SCREEN_WIDTH / 2, 365);
     context.textAlign = "start";
 }
 

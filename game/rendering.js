@@ -257,28 +257,3 @@ var collectLevelItems = function() {
         addInventoryItem(item.type);
     });
 }
-
-var drawLevelItemStatus = function() {
-    if (!currentLevelConfig ||
-        !(currentLevelConfig.items || []).some(function(item) {
-            return item.type === "sleep_powder";
-        })) {
-        return;
-    }
-    const ownsSleepPowder = ownsInventoryItem("sleep_powder");
-    if (ownsSleepPowder &&
-        sleepPowderImage.complete &&
-        sleepPowderImage.naturalWidth > 0) {
-        context.drawImage(sleepPowderImage, SCREEN_WIDTH - 180, 10, 36, 24);
-    }
-    const powderStatus = !ownsSleepPowder
-        ? "POWDER x0"
-        : getSelectedInventoryItem() === "sleep_powder"
-            ? "POWDER [S]"
-            : "POWDER [B]";
-    context.font = "16px monospace";
-    context.fillStyle = "#fff4b8";
-    context.textAlign = "right";
-    context.fillText(powderStatus, SCREEN_WIDTH - 10, 27);
-    context.textAlign = "start";
-}

@@ -31,10 +31,10 @@ window.gameLevelConfigs[window.gameLevels.length - 1] = {
     items: [
         {
             type: "sleep_powder",
-            x: 30 * 32 + 8,
-            y: 10 * 32 - 32,
-            width: 48,
-            height: 32,
+            x: 31 * 32 - ITEM_PIXEL_SIZE.width / 2,
+            y: 9.5 * 32 - ITEM_PIXEL_SIZE.height / 2,
+            width: ITEM_PIXEL_SIZE.width,
+            height: ITEM_PIXEL_SIZE.height,
         },
     ],
 };
