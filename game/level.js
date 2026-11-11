@@ -5,30 +5,59 @@ const LEVEL_MAP_ENEMY_MARKERS = Object.freeze({
     "-2": Object.freeze({ type: "ribbon_pig", direction: 1 }),
     "-3": Object.freeze({ type: "armored_pig", direction: -1 }),
 });
+const LEVEL_MAP_ITEM_MARKERS = Object.freeze({
+    "-4": "sleep_powder",
+});
 
+/* Character markers in empty cells anchor to the next row; bottom-row markers use their own row. */
 var extractLevelMapEntities = function(level, levelIndex) {
     let jamesPosition = null;
     const enemyDefinitions = [];
+    const itemDefinitions = [];
     level.forEach(function(row, rowIndex) {
         row.forEach(function(tile, column) {
             if (tile === LEVEL_MAP_JAMES_MARKER) {
                 if (jamesPosition) {
                     throw new Error("Level " + levelIndex + " has multiple James markers.");
                 }
-                jamesPosition = { column: column, floorRow: rowIndex };
-                row[column] = 1;
+                const anchorRow = Math.min(rowIndex + 1, level.length - 1);
+                jamesPosition = { column: column, floorRow: anchorRow };
+                row[column] = anchorRow === rowIndex ? 1 : 0;
                 return;
             }
             const enemyMarker = LEVEL_MAP_ENEMY_MARKERS[tile];
-            if (!enemyMarker) {
+            if (enemyMarker) {
+                const anchorRow = Math.min(rowIndex + 1, level.length - 1);
+                enemyDefinitions.push({
+                    type: enemyMarker.type,
+                    tilePosition: {
+                        column: column,
+                        floorRow: anchorRow,
+                    },
+                    direction: enemyMarker.direction,
+                });
+                row[column] = anchorRow === rowIndex ? 1 : 0;
                 return;
             }
-            enemyDefinitions.push({
-                type: enemyMarker.type,
-                tilePosition: { column: column, floorRow: rowIndex },
-                direction: enemyMarker.direction,
-            });
-            row[column] = 1;
+            const itemType = LEVEL_MAP_ITEM_MARKERS[tile];
+            if (itemType) {
+                // Keep the existing grid-relative item alignment.
+                itemDefinitions.push({
+                    type: itemType,
+                    x: column * TILE_SIZE - ITEM_PIXEL_SIZE.width / 2,
+                    y: (rowIndex + 0.5) * TILE_SIZE -
+                        ITEM_PIXEL_SIZE.height / 2,
+                    width: ITEM_PIXEL_SIZE.width,
+                    height: ITEM_PIXEL_SIZE.height,
+                });
+                row[column] = 0;
+                return;
+            }
+            if (tile < 0) {
+                throw new Error(
+                    "Unknown level map marker " + tile + " in level " + levelIndex + "."
+                );
+            }
         });
     });
     if (!jamesPosition) {
@@ -37,6 +66,7 @@ var extractLevelMapEntities = function(level, levelIndex) {
     return {
         jamesPosition: jamesPosition,
         enemyDefinitions: enemyDefinitions,
+        itemDefinitions: itemDefinitions,
     };
 }
 
@@ -50,15 +80,11 @@ var getJamesLevelEndPosition = function(level, tilePosition) {
         throw new Error("James position is outside level " + currentLevelIndex);
     }
     const jamesLevelX = tilePosition.column * TILE_SIZE;
-    const centerTile = Math.floor(
-        (jamesLevelX + jamesWidth / 2) / TILE_SIZE
-    );
     const floorRow = tilePosition.floorRow;
     if (!Number.isInteger(floorRow) ||
-        floorRow < 0 ||
-        !level[floorRow] ||
-        level[floorRow][centerTile] === 0) {
-        throw new Error("James has no supporting floor in level " + currentLevelIndex);
+        floorRow < 1 ||
+        floorRow > level.length) {
+        throw new Error("James position is outside level " + currentLevelIndex);
     }
     return {
         x: jamesLevelX,

@@ -12,7 +12,8 @@ var resetLevelEnemies = function(levelIndex, definitions) {
             !Number.isInteger(tilePosition.column) ||
             tilePosition.column < 0 ||
             !Number.isInteger(tilePosition.floorRow) ||
-            tilePosition.floorRow < 0 ||
+            tilePosition.floorRow < 1 ||
+            tilePosition.floorRow > currentLevel.length ||
             tilePosition.column +
                 RIBBON_PIG_WIDTH / TILE_SIZE > currentLevelConfig.size.width) {
             throw new Error("Level enemy has an invalid tile position.");
@@ -22,15 +23,14 @@ var resetLevelEnemies = function(levelIndex, definitions) {
             (levelX + RIBBON_PIG_WIDTH / 2) / TILE_SIZE
         );
         const floorRow = tilePosition.floorRow;
-        if (!currentLevel[floorRow] ||
-            currentLevel[floorRow][centerColumn] === 0) {
-            throw new Error("Level enemy spawn has no supporting floor.");
-        }
+        const isAirborne = !currentLevel[floorRow] ||
+            currentLevel[floorRow][centerColumn] === 0;
         return {
             type: definition.type,
             levelX: levelX,
             levelY: floorRow * TILE_SIZE - RIBBON_PIG_HEIGHT,
             direction: definition.direction < 0 ? -1 : 1,
+            airborne: isAirborne,
             startedAt: Date.now(),
             state: "alive",
         };
@@ -64,8 +64,9 @@ var updateLevelEnemies = function(deltaSeconds, now) {
         const supportProbeX = nextX +
             (enemy.direction > 0 ? RIBBON_PIG_WIDTH - 8 : 8);
         const supportColumn = Math.floor(supportProbeX / TILE_SIZE);
-        const hasGroundAhead = currentLevel[feetRow] &&
-            currentLevel[feetRow][supportColumn] !== 0;
+        const hasGroundAhead = enemy.airborne ||
+            (currentLevel[feetRow] &&
+                currentLevel[feetRow][supportColumn] !== 0);
         const obstacleColumn = Math.floor(
             (leadingEdgeX - (enemy.direction < 0 ? 1 : 0)) / TILE_SIZE
         );

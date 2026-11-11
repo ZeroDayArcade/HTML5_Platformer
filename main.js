@@ -61,7 +61,7 @@ var loadLevel = function(levelIndex) {
     currentLevelConfig = levelConfig;
     const levelEntities = extractLevelMapEntities(currentLevel, levelIndex);
     currentLevelJamesTilePosition = levelEntities.jamesPosition;
-    levelItems = (levelConfig.items || []).map(function(item) {
+    levelItems = levelEntities.itemDefinitions.map(function(item) {
         if (item.type !== "sleep_powder" ||
             !Number.isFinite(item.x) ||
             !Number.isFinite(item.y) ||
