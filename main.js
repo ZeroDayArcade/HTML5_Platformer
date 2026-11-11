@@ -59,8 +59,8 @@ var loadLevel = function(levelIndex) {
     }
     currentLevel = JSON.parse(JSON.stringify(level));
     currentLevelConfig = levelConfig;
-    currentLevelJamesTilePosition =
-        extractJamesTilePosition(currentLevel, levelIndex);
+    const levelEntities = extractLevelMapEntities(currentLevel, levelIndex);
+    currentLevelJamesTilePosition = levelEntities.jamesPosition;
     levelItems = (levelConfig.items || []).map(function(item) {
         if (item.type !== "sleep_powder" ||
             !Number.isFinite(item.x) ||
@@ -75,7 +75,7 @@ var loadLevel = function(levelIndex) {
     });
     resetInventoryForLevel();
     getJamesLevelEndPosition(currentLevel, currentLevelJamesTilePosition);
-    resetLevelEnemies(levelIndex);
+    resetLevelEnemies(levelIndex, levelEntities.enemyDefinitions);
 }
 
 const SCREEN_WIDTH = 816;

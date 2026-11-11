@@ -1,7 +1,7 @@
 /* Enemy, item, and attack behavior. */
 
-var resetLevelEnemies = function(levelIndex) {
-    const definitions = (window.gameLevelEnemies || [])[levelIndex] || [];
+var resetLevelEnemies = function(levelIndex, definitions) {
+    definitions = definitions || [];
     levelEnemies = definitions.map(function(definition) {
         if (definition.type !== "ribbon_pig" &&
             definition.type !== "armored_pig") {

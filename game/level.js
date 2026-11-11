@@ -1,25 +1,43 @@
 /* Level markers, positioning, tile rendering, and collision helpers. */
 
 const LEVEL_MAP_JAMES_MARKER = -1;
+const LEVEL_MAP_ENEMY_MARKERS = Object.freeze({
+    "-2": Object.freeze({ type: "ribbon_pig", direction: 1 }),
+    "-3": Object.freeze({ type: "armored_pig", direction: -1 }),
+});
 
-var extractJamesTilePosition = function(level, levelIndex) {
+var extractLevelMapEntities = function(level, levelIndex) {
     let jamesPosition = null;
+    const enemyDefinitions = [];
     level.forEach(function(row, rowIndex) {
         row.forEach(function(tile, column) {
-            if (tile !== LEVEL_MAP_JAMES_MARKER) {
+            if (tile === LEVEL_MAP_JAMES_MARKER) {
+                if (jamesPosition) {
+                    throw new Error("Level " + levelIndex + " has multiple James markers.");
+                }
+                jamesPosition = { column: column, floorRow: rowIndex };
+                row[column] = 1;
                 return;
             }
-            if (jamesPosition) {
-                throw new Error("Level " + levelIndex + " has multiple James markers.");
+            const enemyMarker = LEVEL_MAP_ENEMY_MARKERS[tile];
+            if (!enemyMarker) {
+                return;
             }
-            jamesPosition = { column: column, floorRow: rowIndex };
+            enemyDefinitions.push({
+                type: enemyMarker.type,
+                tilePosition: { column: column, floorRow: rowIndex },
+                direction: enemyMarker.direction,
+            });
             row[column] = 1;
         });
     });
     if (!jamesPosition) {
         throw new Error("Level " + levelIndex + " is missing its James marker.");
     }
-    return jamesPosition;
+    return {
+        jamesPosition: jamesPosition,
+        enemyDefinitions: enemyDefinitions,
+    };
 }
 
 var getJamesLevelEndPosition = function(level, tilePosition) {
