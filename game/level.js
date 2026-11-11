@@ -5,9 +5,39 @@ const LEVEL_MAP_ENEMY_MARKERS = Object.freeze({
     "-2": Object.freeze({ type: "ribbon_pig", direction: 1 }),
     "-3": Object.freeze({ type: "armored_pig", direction: -1 }),
 });
-const LEVEL_MAP_ITEM_MARKERS = Object.freeze({
-    "-4": "sleep_powder",
+const LEVEL_ITEM_DEFINITIONS = Object.freeze({
+    sleep_powder: Object.freeze({
+        marker: -4,
+        imagePath: "assets/props/sleep-powder.png",
+        width: 48,
+        height: 48,
+        name: "懶豬豬睡睡粉",
+        usage: "按 S 攻擊命中豬豬時可使牠睡著。",
+        note: "不會消耗，可重複使用。",
+    }),
 });
+const LEVEL_MAP_ITEM_MARKERS = Object.freeze({
+    [LEVEL_ITEM_DEFINITIONS.sleep_powder.marker]: "sleep_powder",
+});
+const LEVEL_TILE_IMAGE_PATHS = Object.freeze({
+    1: "assets/props/brick-tile.png",
+    10: LEVEL_ITEM_DEFINITIONS.sleep_powder.imagePath,
+});
+const LEVEL_ITEM_IMAGES = Object.freeze(
+    Object.keys(LEVEL_ITEM_DEFINITIONS).reduce(function(images, itemType) {
+        const definition = LEVEL_ITEM_DEFINITIONS[itemType];
+        const image = new Image();
+        image.onerror = function() {
+            console.error(
+                "Failed to load level item image (" + itemType + "): " +
+                    definition.imagePath
+            );
+        };
+        image.src = definition.imagePath;
+        images[itemType] = image;
+        return images;
+    }, {})
+);
 
 /* Character markers in empty cells anchor to the next row; bottom-row markers use their own row. */
 var extractLevelMapEntities = function(level, levelIndex) {
@@ -41,14 +71,14 @@ var extractLevelMapEntities = function(level, levelIndex) {
             }
             const itemType = LEVEL_MAP_ITEM_MARKERS[tile];
             if (itemType) {
-                // Keep the existing grid-relative item alignment.
+                const itemDefinition = LEVEL_ITEM_DEFINITIONS[itemType];
                 itemDefinitions.push({
                     type: itemType,
-                    x: column * TILE_SIZE - ITEM_PIXEL_SIZE.width / 2,
+                    x: column * TILE_SIZE - itemDefinition.width / 2,
                     y: (rowIndex + 0.5) * TILE_SIZE -
-                        ITEM_PIXEL_SIZE.height / 2,
-                    width: ITEM_PIXEL_SIZE.width,
-                    height: ITEM_PIXEL_SIZE.height,
+                        itemDefinition.height / 2,
+                    width: itemDefinition.width,
+                    height: itemDefinition.height,
                 });
                 row[column] = 0;
                 return;

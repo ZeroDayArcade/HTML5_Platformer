@@ -62,7 +62,10 @@ var loadLevel = function(levelIndex) {
     const levelEntities = extractLevelMapEntities(currentLevel, levelIndex);
     currentLevelJamesTilePosition = levelEntities.jamesPosition;
     levelItems = levelEntities.itemDefinitions.map(function(item) {
-        if (item.type !== "sleep_powder" ||
+        if (!Object.prototype.hasOwnProperty.call(
+            LEVEL_ITEM_DEFINITIONS, item.type
+        ) ||
+            !LEVEL_ITEM_IMAGES[item.type] ||
             !Number.isFinite(item.x) ||
             !Number.isFinite(item.y) ||
             !Number.isFinite(item.width) ||

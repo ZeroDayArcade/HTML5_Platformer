@@ -20,15 +20,6 @@ const INVENTORY_COLORS = Object.freeze({
     text: "#5b4b62",
     footer: "#8f6682",
 });
-const INVENTORY_ITEM_DETAILS = Object.freeze({
-    sleep_powder: {
-        name: "懶豬豬睡睡粉",
-        usage: "按 S 攻擊命中豬豬時可使牠睡著。",
-        note: "不會消耗，可重複使用。",
-        image: sleepPowderImage,
-    },
-});
-
 let inventoryItems = [];
 let selectedInventorySlot = 0;
 let inventoryOpen = false;
@@ -39,7 +30,7 @@ let inventoryToggleWasDown = false;
 
 var addInventoryItem = function(itemType) {
     if (!Object.prototype.hasOwnProperty.call(
-        INVENTORY_ITEM_DETAILS, itemType
+        LEVEL_ITEM_DEFINITIONS, itemType
     )) {
         throw new Error("Unknown inventory item type: " + itemType);
     }
@@ -225,15 +216,17 @@ var drawInventoryScreen = function() {
         const x = 86 + column * 86;
         const y = 112 + row * 86;
         const itemType = inventoryItems[slot];
-        const item = itemType ? INVENTORY_ITEM_DETAILS[itemType] : null;
+        const item = itemType ? LEVEL_ITEM_DEFINITIONS[itemType] : null;
+        const itemImage = itemType ? LEVEL_ITEM_IMAGES[itemType] : null;
 
         context.fillStyle = slot === selectedInventorySlot
             ? INVENTORY_COLORS.selectedSlot
             : INVENTORY_COLORS.slot;
         context.fillRect(x, y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE);
-        if (item && item.image.complete && item.image.naturalWidth > 0) {
+        if (item && itemImage && itemImage.complete &&
+            itemImage.naturalWidth > 0) {
             context.drawImage(
-                item.image,
+                itemImage,
                 x + (INVENTORY_SLOT_SIZE - INVENTORY_SLOT_SIZE) / 2,
                 y + (INVENTORY_SLOT_SIZE - INVENTORY_SLOT_SIZE) / 2,
                 INVENTORY_SLOT_SIZE,
@@ -261,7 +254,7 @@ var drawInventoryScreen = function() {
 
     const selectedType = getSelectedInventoryItem();
     const selectedItem = selectedType
-        ? INVENTORY_ITEM_DETAILS[selectedType]
+        ? LEVEL_ITEM_DEFINITIONS[selectedType]
         : null;
     context.font = "bold 18px monospace";
     context.fillStyle = INVENTORY_COLORS.heading;

@@ -23,9 +23,9 @@ let beyondTitleScreen = false;
 
 const titleMenuPointerImage = new Image();
 titleMenuPointerImage.onerror = function() {
-    console.error("Failed to load menu pointer image: assets/props/poiter.png");
+    console.error("Failed to load menu pointer image: assets/props/menu-pointer.png");
 };
-titleMenuPointerImage.src = "assets/props/poiter.png";
+titleMenuPointerImage.src = "assets/props/menu-pointer.png";
 
 var getTitleScreenPoint = function(event) {
     const bounds = canvas.getBoundingClientRect();

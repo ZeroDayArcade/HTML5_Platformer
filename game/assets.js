@@ -28,7 +28,10 @@ const tileImages = new Map();
 var getTileImage = function(tileNumber) {
     let image = tileImages.get(tileNumber);
     if (!image) {
-        const source = "assets/props/" + tileNumber + ".png";
+        const source = LEVEL_TILE_IMAGE_PATHS[tileNumber];
+        if (!source) {
+            throw new Error("No image configured for level tile " + tileNumber + ".");
+        }
         image = new Image();
         image.onerror = function() {
             console.error("Failed to load tile image: " + source);
@@ -59,11 +62,6 @@ const armoredPigRunRightFrames = getFrameImages("armored-pig-run-right", 6);
 const armoredPigRunLeftFrames = getFrameImages("armored-pig-run-left", 6);
 const armoredPigDieFrames = getFrameImages("armored-pig-die", 6);
 const RIBBON_PIG_ANIMATION_FPS = 9;
-const sleepPowderImage = new Image();
-sleepPowderImage.onerror = function() {
-    console.error("Failed to load sleep powder image: assets/props/10.png");
-};
-sleepPowderImage.src = "assets/props/10.png";
 
 const HERO_DIRECTION = Object.freeze({
     LEFT: "left",

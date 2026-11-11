@@ -225,12 +225,18 @@ var drawLevelEnemies = function(now) {
 
 var drawLevelItems = function() {
     levelItems.forEach(function(item) {
-        if (item.collected || !sleepPowderImage.complete ||
-            sleepPowderImage.naturalWidth === 0) {
+        if (item.collected) {
+            return;
+        }
+        const image = LEVEL_ITEM_IMAGES[item.type];
+        if (!image) {
+            throw new Error("No image configured for level item: " + item.type);
+        }
+        if (!image.complete || image.naturalWidth === 0) {
             return;
         }
         context.drawImage(
-            sleepPowderImage,
+            image,
             item.x - scrollX,
             item.y,
             item.width,
