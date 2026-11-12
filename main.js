@@ -153,6 +153,41 @@ var resetGame = function() {
     jamesHug = null;
 }
 
+var startSelectedLevelForTesting = function() {
+    const levelNumber = window.prompt(
+        "Enter a level number to test (1-" + levels.length + ")."
+    );
+    if (levelNumber === null) {
+        return;
+    }
+    const requestedLevel = Number(levelNumber);
+    if (!Number.isInteger(requestedLevel) ||
+        requestedLevel < 1 ||
+        requestedLevel > levels.length) {
+        window.alert("Enter a whole number from 1 to " + levels.length + ".");
+        return;
+    }
+    if (inventoryOpen) {
+        closeInventory();
+    }
+    currentLevelIndex = requestedLevel - 1;
+    gameOver = false;
+    demoComplete = false;
+    resetGame();
+    startGameFromTitle();
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.code !== "KeyL" ||
+        !event.ctrlKey ||
+        !event.shiftKey ||
+        event.repeat) {
+        return;
+    }
+    event.preventDefault();
+    startSelectedLevelForTesting();
+});
+
 var finishLevelAfterHug = function() {
     jamesHug = null;
     demoComplete = true;

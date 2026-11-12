@@ -23,6 +23,7 @@ This demo contains one small level but illustrates the concepts above. The way i
 Level backgrounds are loaded by level order from `assets/backgrounds/levelN.png` (for example, Level 1 uses `level1.png`).
 The opening and game-over screens use `assets/backgrounds/begining.png` and `assets/backgrounds/game_over.png`.
 The level-complete screen layers `assets/backgrounds/level complete.png` over the current level background. It appears after every level; press Enter to continue to the next level or return to the title after the last level.
+Press Ctrl+Shift+L and enter a level number to jump directly to that level for testing.
 
 Level map values use numeric tile IDs mapped to named images by `LEVEL_TILE_IMAGE_PATHS` in `game/level.js`. `0` is empty, `1` draws the brick tile, `10` draws the sleep-powder image, and every nonzero tile is solid.
 Collectible items are defined in `LEVEL_ITEM_DEFINITIONS` in `game/level.js`, including their image, size, and inventory text. The `-4` map marker places sleep powder.
