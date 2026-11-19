@@ -13,11 +13,21 @@ const LEVEL_ITEM_DEFINITIONS = Object.freeze({
         height: 48,
         name: "懶豬豬睡睡粉",
         usage: "按 S 攻擊命中豬豬時可使牠睡著。",
-        note: "不會消耗，可重複使用。",
+        note: "小心不要讓自己睡著囉。",
+    }),
+    cool_sunglasses: Object.freeze({
+        marker: -5,
+        imagePath: "assets/props/sunglasses.png",
+        width: 48,
+        height: 48,
+        name: "酷炫太陽眼鏡",
+        usage: "在背包選中後按 Enter 確認並戴上；遊戲中按 Enter 戴上或摘下。",
+        note: "讓你酷炫甜美 潮到出水。",
     }),
 });
 const LEVEL_MAP_ITEM_MARKERS = Object.freeze({
     [LEVEL_ITEM_DEFINITIONS.sleep_powder.marker]: "sleep_powder",
+    [LEVEL_ITEM_DEFINITIONS.cool_sunglasses.marker]: "cool_sunglasses",
 });
 const LEVEL_TILE_IMAGE_PATHS = Object.freeze({
     1: "assets/props/brick-tile.png",
@@ -137,15 +147,26 @@ var drawTile = function(x, y, tileNumber) {
 var drawLevelTiles = function(level, hTiles, vTiles, scrollX, scrollY) {
     for (var i=0; i<hTiles; i++) {
         for (var j=0; j<vTiles; j++) {
-            if (level[j][i] > 0) {
+            const tile = level[j][i];
+            if (isLevelTileVisible(tile)) {
                 drawTile(
                     TILE_SIZE * i - scrollX,
                     j * TILE_SIZE - scrollY,
-                    level[j][i]
+                    tile === 2 ? 1 : tile
                 );
             }
         }
     }
+}
+
+var isLevelTileVisible = function(tile) {
+    if (tile === 1) {
+        return !sunglassesWorn;
+    }
+    if (tile === 2) {
+        return sunglassesWorn;
+    }
+    return tile > 0;
 }
 
 /* Check Single Tile for Collision with Player or other Sprite */

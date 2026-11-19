@@ -27,6 +27,8 @@ let inventoryOpenedAt = null;
 let inventoryOverlayDrawn = false;
 let inventoryNavigationKeyStates = {};
 let inventoryToggleWasDown = false;
+let inventoryEnterWasDown = false;
+let sunglassesWorn = false;
 
 var addInventoryItem = function(itemType) {
     if (!Object.prototype.hasOwnProperty.call(
@@ -59,6 +61,8 @@ var resetInventoryForLevel = function() {
     inventoryOverlayDrawn = false;
     inventoryNavigationKeyStates = {};
     inventoryToggleWasDown = false;
+    inventoryEnterWasDown = false;
+    sunglassesWorn = false;
 }
 
 var clearInventoryGameplayInput = function() {
@@ -123,6 +127,14 @@ var inventoryKeyPressed = function(keyCode) {
 }
 
 var updateInventoryInput = function() {
+    if (!pressedKeys["13"]) {
+        inventoryEnterWasDown = false;
+    }
+    const enterPressed = Boolean(pressedKeys["13"]) &&
+        !inventoryEnterWasDown;
+    if (enterPressed) {
+        inventoryEnterWasDown = true;
+    }
     if (!gameStarted) {
         inventoryToggleWasDown = Boolean(pressedKeys["66"]);
         return;
@@ -136,6 +148,18 @@ var updateInventoryInput = function() {
             closeInventory();
         } else {
             openInventory();
+        }
+        return;
+    }
+    if (enterPressed) {
+        if (inventoryOpen) {
+            if (getSelectedInventoryItem() === "cool_sunglasses") {
+                sunglassesWorn = true;
+            }
+            closeInventory();
+        } else if (sunglassesWorn ||
+            getSelectedInventoryItem() === "cool_sunglasses") {
+            sunglassesWorn = !sunglassesWorn;
         }
         return;
     }
@@ -208,7 +232,11 @@ var drawInventoryScreen = function() {
     context.fillText("背包", 86, 82);
     context.font = "14px monospace";
     context.fillStyle = INVENTORY_COLORS.controls;
-    context.fillText("WASD：選擇道具｜B／Esc：關閉", 440, 80);
+    context.fillText(
+        "WASD：選道具 Enter：選中並關閉",
+        440,
+        80
+    );
 
     for (let slot = 0; slot < INVENTORY_SLOT_COUNT; slot++) {
         const column = slot % INVENTORY_COLUMNS;
@@ -281,6 +309,16 @@ var drawInventoryScreen = function() {
             20
         );
         detailY += 8;
+        if (selectedType === "cool_sunglasses") {
+            detailY = drawInventoryWrappedText(
+                "目前狀態：" + (sunglassesWorn ? "已戴上" : "未戴上"),
+                details.x + 16,
+                detailY,
+                details.width - 32,
+                20
+            );
+            detailY += 8;
+        }
         drawInventoryWrappedText(
             selectedItem.note,
             details.x + 16,
@@ -304,7 +342,7 @@ var drawInventoryScreen = function() {
     context.font = "14px monospace";
     context.fillStyle = INVENTORY_COLORS.footer;
     context.fillText(
-        "選好道具後關閉背包，即可使用。",
+        "Enter 確認並關閉（眼鏡會戴上）；遊戲中按 Enter 切換。",
         SCREEN_WIDTH / 2,
         394
     );

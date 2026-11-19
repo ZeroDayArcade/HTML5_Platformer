@@ -26,8 +26,8 @@ The level-complete screen layers `assets/backgrounds/level complete.png` over th
 Press Ctrl+Shift+L and enter a level number to jump directly to that level for testing.
 Level 3 is a 25x200 map. Its original 15-row area is shown first; the view scrolls upward to reveal the ten rows above it when Sonia reaches the original area's top edge.
 
-Level map values use numeric tile IDs mapped to named images by `LEVEL_TILE_IMAGE_PATHS` in `game/level.js`. `0` is empty, `1` draws the brick tile, `10` draws the sleep-powder image, and every nonzero tile is solid.
-Collectible items are defined in `LEVEL_ITEM_DEFINITIONS` in `game/level.js`, including their image, size, and inventory text. The `-4` map marker places sleep powder.
+Level map values use numeric tile IDs mapped to named images by `LEVEL_TILE_IMAGE_PATHS` in `game/level.js`. `0` is empty, `1` is a normal brick, `2` is a hidden brick, and `10` draws the sleep-powder image. Normal and hidden bricks remain solid; wearing the sunglasses swaps which brick type is visible.
+Collectible items are defined in `LEVEL_ITEM_DEFINITIONS` in `game/level.js`, including their image, size, and inventory text. The `-4` map marker places sleep powder, and `-5` places the sunglasses.
 
 ## Code layout
 
@@ -44,10 +44,11 @@ Collectible items are defined in `LEVEL_ITEM_DEFINITIONS` in `game/level.js`, in
     <li>S: Attack</li>
     <li>B: Open/close backpack</li>
     <li>WASD: Select items while the backpack is open</li>
+    <li>Enter: Confirm the selected item and close the backpack (sunglasses are worn automatically); toggle sunglasses in-game</li>
     <li>Esc: Close the backpack</li>
 </ul>
 
-Level 2 is a longer platforming course with increasingly wide pits, stepping platforms, and an elevated sleep-powder pickup. Its armored pig patrols like the Ribbon Pig but cannot be defeated by ordinary attacks. Collect the powder, select it in the backpack, and land an S attack to put the pig to sleep. The powder is not consumed. The backpack pauses gameplay and displays the selected item's name and use. The Wing Amulet lets Sonia hover by holding W. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
+Level 2 is a longer platforming course with increasingly wide pits, stepping platforms, and an elevated sleep-powder pickup. Its armored pig patrols like the Ribbon Pig but cannot be defeated by ordinary attacks. Collect the powder, select it in the backpack, and land an S attack to put the pig to sleep. The powder is not consumed. Collect the sunglasses, select them in the backpack, and press Enter to wear them and close the backpack. In-game, press Enter to toggle them on or off. The backpack pauses gameplay and displays the selected item's name and use. The Wing Amulet lets Sonia hover by holding W. I may build out this game at some point in the future into a full game, but for now it serves as an example for anyone interested in building an HTML5 platformer without a pre-made engine.
 
 
 # Running Locally
