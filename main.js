@@ -10,6 +10,7 @@ let jumpAnimationPhase = "normal";
 let jumpPhaseStartedAt = 0;
 
 var scrollX = 0;
+var scrollY = 0;
 
 var resetAnimationTime = Date.now();
 var previousHeroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
@@ -59,6 +60,7 @@ var loadLevel = function(levelIndex) {
     }
     currentLevel = JSON.parse(JSON.stringify(level));
     currentLevelConfig = levelConfig;
+    scrollY = Math.max(0, height * TILE_SIZE - SCREEN_HEIGHT);
     const levelEntities = extractLevelMapEntities(currentLevel, levelIndex);
     currentLevelJamesTilePosition = levelEntities.jamesPosition;
     levelItems = levelEntities.itemDefinitions.map(function(item) {
@@ -132,6 +134,9 @@ var resetGame = function() {
         velocityY: 0,
     };
     loadLevel(currentLevelIndex);
+    hero.levelY =
+        currentLevelConfig.size.height * TILE_SIZE - TILE_SIZE - HERO_HEIGHT;
+    hero.renderY = hero.levelY - scrollY;
     scrollX = 0;
     hoverjump = false;
     heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
@@ -256,7 +261,12 @@ var gameLoop = function(interval) {
         heroAnimationIndex = HERO_ANIMATION.IDLE_RIGHT;
     }
 
-    /* Update scroll position */
+    /* Reveal the upper map only after Sonia reaches the original area's top edge. */
+    const maxScrollY = Math.max(
+        0,
+        currentLevelConfig.size.height * TILE_SIZE - SCREEN_HEIGHT
+    );
+    scrollY = Math.min(maxScrollY, Math.max(0, hero.levelY));
     if (hero.levelX + hero.spriteWidth/2 >= SCREEN_WIDTH/2 && 
         scrollX+SCREEN_WIDTH < currentLevelConfig.size.width*TILE_SIZE ||
         (hero.levelX + SCREEN_WIDTH/2 + hero.spriteWidth/2 <= 
@@ -264,7 +274,7 @@ var gameLoop = function(interval) {
         scrollX = hero.levelX - SCREEN_WIDTH/2 + hero.spriteWidth/2;
     }
     hero.renderX = hero.levelX - scrollX;
-    hero.renderY = hero.levelY;
+    hero.renderY = hero.levelY - scrollY;
 
     drawLevelBackground(levelBackgrounds[currentLevelIndex], scrollX);
 
@@ -272,7 +282,8 @@ var gameLoop = function(interval) {
         currentLevel,
         currentLevelConfig.size.width,
         currentLevelConfig.size.height,
-        scrollX
+        scrollX,
+        scrollY
     );
     drawLevelItems();
     updateLevelEnemies(interval, animationTime);
@@ -280,14 +291,14 @@ var gameLoop = function(interval) {
     drawJamesLevelEndPreview(jamesPosition, animationTime - resetAnimationTime);
     if (jamesHug) {
         hero.renderX = hero.levelX - scrollX;
-        hero.renderY = hero.levelY;
+        hero.renderY = hero.levelY - scrollY;
         const elapsed = animationTime - jamesHug.startedAt;
         const hugFrame = getAnimationFrame(HERO_ANIMATION.IDLE_RIGHT, elapsed);
         drawHeroFrame(HERO_ANIMATION.IDLE_RIGHT, hugFrame, hero.renderX, hero.renderY,
             hero.spriteWidth, hero.spriteHeight);
         drawHugHeart(
             (hero.renderX + jamesPosition.x - scrollX + jamesPosition.width) / 2,
-            jamesPosition.y - 4,
+            jamesPosition.y - scrollY - 4,
             elapsed
         );
         if (elapsed >= 3000) {
@@ -437,11 +448,12 @@ var gameLoop = function(interval) {
     }
 
     /* Physics */
+    const worldBottomY = currentLevelConfig.size.height * TILE_SIZE;
     if ((hero.velocityY >= 0 && collisions.top)) {
-        nearestFloorHeight = SCREEN_HEIGHT-collisions.topY;
+        nearestFloorHeight = worldBottomY - collisions.topY;
     } else nearestFloorHeight = -hero.spriteHeight;
 
-    distanceFromFloor = SCREEN_HEIGHT -
+    distanceFromFloor = worldBottomY -
         nearestFloorHeight - (hero.levelY + hero.spriteHeight);
     if (attackState) {
         hero.velocityY = 0;
@@ -454,7 +466,7 @@ var gameLoop = function(interval) {
             hero.velocityY = 0;
         }
         if (distanceFromFloor <= 0) {
-            hero.levelY = SCREEN_HEIGHT - nearestFloorHeight -
+            hero.levelY = worldBottomY - nearestFloorHeight -
                 hero.spriteHeight;
         }
 
@@ -536,7 +548,7 @@ var gameLoop = function(interval) {
         };
     }
 
-    if (hero.levelY >= SCREEN_HEIGHT) {
+    if (hero.levelY >= currentLevelConfig.size.height * TILE_SIZE) {
         gameOver = true;
         gameStarted = false;
     }
@@ -551,6 +563,9 @@ let previousFrameTime = oldTime;
 
 /* Load Current Level */
 loadLevel(currentLevelIndex);
+hero.levelY =
+    currentLevelConfig.size.height * TILE_SIZE - TILE_SIZE - HERO_HEIGHT;
+hero.renderY = hero.levelY - scrollY;
 
 /* Game States */
 setInterval(function() {

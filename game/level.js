@@ -134,11 +134,15 @@ var drawTile = function(x, y, tileNumber) {
 }
 
 /* Render Level Tiles */
-var drawLevelTiles = function(level, hTiles, vTiles, scrollX) {
+var drawLevelTiles = function(level, hTiles, vTiles, scrollX, scrollY) {
     for (var i=0; i<hTiles; i++) {
         for (var j=0; j<vTiles; j++) {
             if (level[j][i] > 0) {
-                drawTile(TILE_SIZE*i-scrollX, j*TILE_SIZE, level[j][i]);
+                drawTile(
+                    TILE_SIZE * i - scrollX,
+                    j * TILE_SIZE - scrollY,
+                    level[j][i]
+                );
             }
         }
     }

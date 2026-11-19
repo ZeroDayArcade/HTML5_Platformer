@@ -58,12 +58,13 @@ var drawJamesFrame = function(frame, x, y, width, scale) {
 
 var drawJamesLevelEndPreview = function(position, elapsedMs) {
     const screenX = position.x - scrollX;
+    const screenY = position.y - scrollY;
     if (screenX + position.width < 0 || screenX > SCREEN_WIDTH) {
         return;
     }
     const frameIndex = Math.floor(elapsedMs * 3 / 1000) % 2;
     const frame = jamesIdleRightFrames[frameIndex];
-    drawJamesFrame(frame, screenX, position.y, position.width);
+    drawJamesFrame(frame, screenX, screenY, position.width);
 }
 
 var drawHugHeart = function(x, y, elapsedMs) {
@@ -146,6 +147,7 @@ var drawHeroFrame = function(animationIndex, frameIndex, x, y, width, height) {
 
 var drawLevelEnemies = function(now) {
     levelEnemies.forEach(function(enemy) {
+        const enemyScreenY = enemy.levelY - scrollY;
         const isArmoredPig = enemy.type === "armored_pig";
         const frames = isArmoredPig
             ? enemy.state === "sleeping"
@@ -198,18 +200,22 @@ var drawLevelEnemies = function(now) {
                 context.drawImage(
                     frame,
                     enemy.levelX - scrollX + (RIBBON_PIG_WIDTH - width) / 2,
-                    enemy.levelY + RIBBON_PIG_HEIGHT - height,
+                    enemyScreenY + RIBBON_PIG_HEIGHT - height,
                     width,
                     height
                 );
             } else {
-                context.drawImage(frame, enemy.levelX - scrollX, enemy.levelY);
+                context.drawImage(
+                    frame,
+                    enemy.levelX - scrollX,
+                    enemyScreenY
+                );
             }
             if (isArmoredPig &&
                 enemy.state === "sleeping" &&
                 frameIndex === armoredPigDieFrames.length - 1) {
                 const sleepTextX = enemy.levelX - scrollX + RIBBON_PIG_WIDTH / 2;
-                const sleepTextY = enemy.levelY - 4;
+                const sleepTextY = enemyScreenY - 4;
                 context.font = "16px monospace";
                 context.textAlign = "center";
                 context.lineWidth = 3;
@@ -238,7 +244,7 @@ var drawLevelItems = function() {
         context.drawImage(
             image,
             item.x - scrollX,
-            item.y,
+            item.y - scrollY,
             item.width,
             item.height
         );
