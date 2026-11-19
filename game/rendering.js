@@ -44,6 +44,16 @@ var drawLevelBackground = function(background, backgroundScrollX) {
     }
 }
 
+var drawSunglassesOverlay = function() {
+    if (!sunglassesWorn) {
+        return;
+    }
+    context.save();
+    context.fillStyle = "rgba(18, 20, 38, 0.7)";
+    context.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    context.restore();
+}
+
 var drawJamesFrame = function(frame, x, y, width, scale) {
     if (!frame || !frame.complete || frame.naturalWidth === 0) {
         return;

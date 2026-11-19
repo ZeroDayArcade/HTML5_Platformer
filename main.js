@@ -301,6 +301,7 @@ var gameLoop = function(interval) {
             jamesPosition.y - scrollY - 4,
             elapsed
         );
+        drawSunglassesOverlay();
         if (elapsed >= 3000) {
             finishLevelAfterHug();
         }
@@ -379,6 +380,7 @@ var gameLoop = function(interval) {
     drawLevelEnemies(animationTime);
     drawHeroFrame(heroAnimationIndex, currentFrame, hero.renderX, hero.renderY,
         hero.spriteWidth, hero.spriteHeight);
+    drawSunglassesOverlay();
 
     let collisions = checkSpriteTileCollisions({
         levelX: hero.levelX+(hero.spriteWidth-HERO_HITBOX_WIDTH)/2,
